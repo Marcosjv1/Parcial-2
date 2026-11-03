@@ -1,27 +1,19 @@
 sequenceDiagram
   actor U as Usuario
-  participant NE as NewEntryScreen
-  participant SS as SpeechService
-  participant MS as MediaService
-  participant LS as LocationService
-  participant R as DiaryRepository
-  participant DB as SQLite
-  U->>NE: Toca "Cámara"
-  NE->>MS: takePhoto()
-  MS-->>NE: ruta de la imagen
-  U->>NE: Toca "Dictar" y habla
-  NE->>SS: startListening(onResult)
-  SS-->>NE: texto parcial / final
-  U->>NE: Toca "Guardar"
-  NE->>LS: getCurrentPosition()
-  alt GPS disponible
-    LS-->>NE: GeoPoint
-  else LocationException
-    LS-->>NE: error
-    NE->>U: ¿Guardar sin ubicación?
-  end
-  NE->>R: insert(DiaryEntry)
-  R->>DB: INSERT
-  DB-->>R: id
-  R-->>NE: entrada con id
-  NE-->>U: pop(true) → lista se recarga
+  participant N as NuevaEntradaScreen
+  participant C as CamaraService
+  participant V as VozService
+  participant G as UbicacionService
+  participant D as DBHelper
+  U->>N: Toca "Cámara"
+  N->>C: tomarFoto()
+  C-->>N: ruta de la foto
+  U->>N: Toca "Dictar con voz" y habla
+  N->>V: escuchar()
+  V-->>N: texto reconocido
+  U->>N: Toca "Guardar"
+  N->>G: obtenerUbicacion()
+  G-->>N: latitud, longitud
+  N->>D: insertar(entrada)
+  D-->>N: OK
+  N-->>U: Regresa a la lista

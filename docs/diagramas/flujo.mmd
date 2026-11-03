@@ -1,37 +1,12 @@
 flowchart TB
-  subgraph HW["1 · Hardware"]
-    direction LR
-    CAM[Cámara / Galería]
-    MIC[Micrófono]
-    GPS[GPS]
-  end
-  subgraph SV["2 · Servicios"]
-    direction LR
-    MS[MediaService]
-    SS[SpeechService]
-    LS[LocationService]
-  end
-  NE["3 · NewEntryScreen<br/>arma la DiaryEntry"]
-  REPO["4 · SqliteDiaryRepository"]
-  subgraph ST["5 · Almacenamiento local"]
-    direction LR
-    DB[("SQLite<br/>diary_entries")]
-    FS[/"diary_images/"/]
-  end
-  HS["6 · HomeScreen<br/>FutureBuilder"]
-  DS["7 · EntryDetailScreen<br/>Hero + mapa"]
-  GM["8 · Google Maps"]
-
-  CAM -- XFile --> MS
-  MIC -- audio --> SS
-  GPS -- Position --> LS
-  MS -- ruta de imagen --> NE
-  SS -- texto --> NE
-  LS -- GeoPoint --> NE
-  MS -. copia la foto .-> FS
-  NE -- "insert()" --> REPO
-  REPO -- INSERT --> DB
-  DB -- SELECT --> REPO
-  REPO -- "getAll()" --> HS
-  HS -- "pushNamed(entrada)" --> DS
-  DS -- coordenadas --> GM
+  CAM[Cámara / Galería] -- foto --> CS[CamaraService]
+  MIC[Micrófono] -- voz --> VS[VozService]
+  GPS[GPS] -- posición --> US[UbicacionService]
+  CS -- ruta de la foto --> NE[NuevaEntradaScreen]
+  VS -- texto --> NE
+  US -- latitud y longitud --> NE
+  NE -- "insertar(entrada)" --> DB[DBHelper]
+  DB <--> SQL[(SQLite<br/>tabla entradas)]
+  DB -- "obtenerTodas()" --> IS[InicioScreen<br/>FutureBuilder]
+  IS -- "pushNamed('/detalle')" --> DS[DetalleScreen<br/>Hero]
+  DS -- coordenadas --> GM[Google Maps]

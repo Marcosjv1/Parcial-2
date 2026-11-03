@@ -1,0 +1,62 @@
+classDiagram
+direction LR
+class MiApp {
+  +build() MaterialApp
+}
+class InicioScreen {
+  -Future~List~Entrada~~ _entradas
+  -_recargar()
+  -_irANuevaEntrada()
+  -_irADetalle(Entrada)
+}
+class NuevaEntradaScreen {
+  -String? _imagen
+  -bool _escuchando
+  -_tomarFoto()
+  -_elegirDeGaleria()
+  -_dictar()
+  -_guardar()
+}
+class DetalleScreen {
+  -_abrirMapa(Entrada)
+  -_eliminar(Entrada)
+}
+class Entrada {
+  +int? id
+  +String titulo
+  +String texto
+  +String fecha
+  +String? imagen
+  +double? latitud
+  +double? longitud
+  +toMap() Map
+  +fromMap(Map)$ Entrada
+}
+class DBHelper {
+  +obtenerDB()$ Database
+  +insertar(Entrada)$
+  +obtenerTodas()$ List~Entrada~
+  +eliminar(int)$
+}
+class CamaraService {
+  +tomarFoto()$ String?
+  +elegirDeGaleria()$ String?
+}
+class VozService {
+  +iniciar(alTerminar) bool
+  +escuchar(alReconocer)
+  +detener()
+}
+class UbicacionService {
+  +obtenerUbicacion()$ Position
+}
+MiApp --> InicioScreen : ruta /
+MiApp --> NuevaEntradaScreen : ruta /nueva
+MiApp --> DetalleScreen : ruta /detalle
+InicioScreen --> DBHelper
+DetalleScreen --> DBHelper
+NuevaEntradaScreen --> DBHelper
+NuevaEntradaScreen --> CamaraService
+NuevaEntradaScreen --> VozService
+NuevaEntradaScreen --> UbicacionService
+DBHelper ..> Entrada
