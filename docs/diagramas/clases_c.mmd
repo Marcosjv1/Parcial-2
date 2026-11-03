@@ -1,0 +1,11 @@
+classDiagram
+direction TB
+class AppException {
+  +String message
+  +toString() String
+}
+AppException <|-- StorageException
+AppException <|-- MediaException
+AppException <|-- SpeechException
+AppException <|-- LocationException
+AppException <|-- MapsException
