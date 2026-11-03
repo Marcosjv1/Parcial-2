@@ -1,0 +1,40 @@
+name: bitacora
+description: >-
+  Bitácora: diario personal geolocalizado con fotos, dictado por voz y mapa.
+  Proyecto Parcial 2 - Desarrollo de Aplicaciones Móviles.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Almacenamiento local (SQLite)
+  sqflite: ^2.4.2
+  path: ^1.9.0
+  path_provider: ^2.1.5
+
+  # Gadget 1: Multimedia (cámara y galería)
+  image_picker: ^1.2.0
+
+  # Gadget 2: Audio y dictado (micrófono -> texto)
+  speech_to_text: ^7.3.0
+
+  # Gadget 3: Geolocalización y mapas
+  geolocator: ^14.0.2
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  url_launcher: ^6.3.2
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
