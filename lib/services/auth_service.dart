@@ -20,7 +20,7 @@ class AuthService {
 
     try {
       return await _auth.authenticate(
-        localizedReason: 'Usa tu huella para abrir tu diario',
+        localizedReason: 'Usa tu huella para ver tus reportes',
         biometricOnly: false, // si no hay huella registrada, acepta el PIN
         persistAcrossBackgrounding: true,
       );
@@ -33,7 +33,7 @@ class AuthService {
           return false; // el usuario cerró el diálogo
         case LocalAuthExceptionCode.noCredentialsSet:
           throw Exception(
-            'Configura un PIN o huella en tu teléfono para proteger tu diario',
+            'Configura un PIN o huella en tu teléfono para proteger tus reportes',
           );
         case LocalAuthExceptionCode.temporaryLockout:
         case LocalAuthExceptionCode.biometricLockout:

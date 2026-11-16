@@ -1,40 +1,52 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../database/db_helper.dart';
-import '../models/entrada.dart';
+import '../models/reporte.dart';
+import '../widgets/reporte_widgets.dart';
 
 // ============================================================
 // PANTALLA 4: DETALLE
-// Muestra una entrada completa: foto (con animación Hero), texto,
-// coordenadas y el botón para abrir Google Maps.
+// Muestra un reporte completo: foto (con animación Hero), tipo,
+// estado, descripción, coordenadas y el botón para abrir Google Maps.
+// También deja marcarlo como resuelto o borrarlo.
 // ============================================================
 class DetalleScreen extends StatelessWidget {
   const DetalleScreen({super.key});
 
   // Arma un link de Google Maps con la latitud y longitud guardadas
   // y lo abre con url_launcher (se abre la app de Maps o el navegador).
-  Future<void> _abrirMapa(BuildContext context, Entrada entrada) async {
+  Future<void> _abrirMapa(BuildContext context, Reporte reporte) async {
     final url = Uri.parse(
       'https://www.google.com/maps/search/?api=1'
-      '&query=${entrada.latitud},${entrada.longitud}',
+      '&query=${reporte.latitud},${reporte.longitud}',
     );
     try {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo abrir el mapa: $e')),
-      );
+      _mensaje(context, 'No se pudo abrir el mapa: $e');
     }
   }
 
-  // Muestra cómo se guarda la entrada (serializada en JSON)
-  void _verJson(BuildContext context, Entrada entrada) {
-    final json = const JsonEncoder.withIndent('  ').convert(entrada.toMap());
+  // Cambia el reporte a "Resuelto" (o de regreso a "Pendiente")
+  Future<void> _cambiarEstado(BuildContext context, Reporte reporte) async {
+    final nuevo = reporte.resuelto ? 'Pendiente' : 'Resuelto';
+    try {
+      await DBHelper.actualizarEstado(reporte.id!, nuevo);
+      if (!context.mounted) return;
+      Navigator.pop(context); // regresamos a la lista, que se recarga sola
+    } catch (e) {
+      if (!context.mounted) return;
+      _mensaje(context, 'Error al actualizar: $e');
+    }
+  }
+
+  // Muestra cómo se guarda el reporte (serializado en JSON)
+  void _verJson(BuildContext context, Reporte reporte) {
+    final json = const JsonEncoder.withIndent('  ').convert(reporte.toMap());
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -50,37 +62,40 @@ class DetalleScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _eliminar(BuildContext context, Entrada entrada) async {
+  Future<void> _eliminar(BuildContext context, Reporte reporte) async {
     try {
-      await DBHelper.eliminar(entrada.id!);
+      await DBHelper.eliminar(reporte.id!);
       if (!context.mounted) return;
       Navigator.pop(context); // regresamos a la lista
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al eliminar: $e')),
-      );
+      _mensaje(context, 'Error al eliminar: $e');
     }
+  }
+
+  void _mensaje(BuildContext context, String texto) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
   @override
   Widget build(BuildContext context) {
-    // La pantalla de inicio nos mandó la entrada como "arguments"
-    // al navegar (pushNamed). Aquí la recibimos.
-    final entrada = ModalRoute.of(context)!.settings.arguments as Entrada;
+    // La pantalla de inicio nos mandó el reporte como "arguments"
+    // al navegar (pushNamed). Aquí lo recibimos.
+    final reporte = ModalRoute.of(context)!.settings.arguments as Reporte;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(entrada.titulo),
+        title: Text(reporte.tipo),
         actions: [
           IconButton(
             tooltip: 'Ver datos en JSON',
             icon: const Icon(Icons.data_object),
-            onPressed: () => _verJson(context, entrada),
+            onPressed: () => _verJson(context, reporte),
           ),
           IconButton(
+            tooltip: 'Eliminar',
             icon: const Icon(Icons.delete),
-            onPressed: () => _eliminar(context, entrada),
+            onPressed: () => _eliminar(context, reporte),
           ),
         ],
       ),
@@ -89,36 +104,52 @@ class DetalleScreen extends StatelessWidget {
         children: [
           // Mismo tag que en la lista, para que funcione la animación Hero
           Hero(
-            tag: 'foto${entrada.id}',
-            child: entrada.imagen != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.file(
-                      File(entrada.imagen!),
-                      height: 250,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : const Icon(Icons.book, size: 120),
+            tag: 'foto${reporte.id}',
+            child: reporte.imagen != null
+                ? FotoReporte(reporte: reporte, tamano: 320)
+                : Icon(iconoDeTipo(reporte.tipo), size: 120),
           ),
           const SizedBox(height: 16),
-          Text(entrada.fecha, style: const TextStyle(color: Colors.grey)),
-          const SizedBox(height: 8),
-          Text(entrada.texto, style: const TextStyle(fontSize: 18)),
+          Row(
+            children: [
+              EstadoChip(estado: reporte.estado),
+              const SizedBox(width: 12),
+              Text(reporte.fecha, style: const TextStyle(color: Colors.grey)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text('Descripción',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(reporte.descripcion, style: const TextStyle(fontSize: 18)),
           const SizedBox(height: 24),
-          if (entrada.latitud != null) ...[
+          const Text('Ubicación',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          if (reporte.latitud != null) ...[
             Text(
-              'Ubicación: ${entrada.latitud!.toStringAsFixed(5)}, '
-              '${entrada.longitud!.toStringAsFixed(5)}',
+              'Coordenadas: ${reporte.latitud!.toStringAsFixed(5)}, '
+              '${reporte.longitud!.toStringAsFixed(5)}',
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
-              onPressed: () => _abrirMapa(context, entrada),
+              onPressed: () => _abrirMapa(context, reporte),
               icon: const Icon(Icons.map),
               label: const Text('Ver en Google Maps'),
             ),
           ] else
-            const Text('Esta entrada no tiene ubicación'),
+            const Text('Este reporte no tiene ubicación'),
+          const SizedBox(height: 24),
+          const Text('¿Ya lo arreglaron?',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          FilledButton.icon(
+            onPressed: () => _cambiarEstado(context, reporte),
+            icon: Icon(reporte.resuelto ? Icons.undo : Icons.check),
+            label: Text(
+              reporte.resuelto ? 'Marcar como pendiente' : 'Marcar como resuelto',
+            ),
+          ),
         ],
       ),
     );

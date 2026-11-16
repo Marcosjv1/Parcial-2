@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />            <!-- Huella / login biometrico -->
 
     <application
-        android:label="Bitácora"
+        android:label="ReportaCalle"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

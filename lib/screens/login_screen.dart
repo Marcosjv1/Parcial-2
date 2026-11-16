@@ -5,7 +5,9 @@ import '../services/auth_service.dart';
 // ============================================================
 // PANTALLA 1: LOGIN
 // Es lo primero que ves. Pide la huella (o el PIN del teléfono).
-// Si es correcta, te manda a la lista de entradas.
+// Si es correcta, te manda a la lista de reportes.
+// ¿Por qué huella? Tus reportes guardan fotos y lugares por donde
+// pasas, así que solo tú deberías poder verlos.
 // ============================================================
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -60,30 +62,36 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.lock, size: 80, color: Colors.teal),
+              const Icon(Icons.add_road, size: 90, color: Colors.orange),
               const SizedBox(height: 16),
               const Text(
-                'Bitácora',
+                'ReportaCalle',
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Tu diario es privado. Desbloquéalo con tu huella.',
+                'Reporta baches, lámparas apagadas, basura y fugas de tu ciudad.',
                 textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
+              const Text(
+                'Pon tu huella para entrar',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 12),
               if (_error != null) ...[
                 Text(
                   _error!,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.red),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
               ],
               FilledButton.icon(
                 onPressed: _verificando ? null : _desbloquear,
                 icon: const Icon(Icons.fingerprint),
-                label: Text(_verificando ? 'Verificando...' : 'Desbloquear'),
+                label: Text(_verificando ? 'Verificando...' : 'Entrar con huella'),
               ),
             ],
           ),

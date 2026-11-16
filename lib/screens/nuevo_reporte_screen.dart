@@ -4,33 +4,33 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../database/db_helper.dart';
-import '../models/entrada.dart';
+import '../models/reporte.dart';
 import '../services/camara_service.dart';
 import '../services/permisos_service.dart';
 import '../services/ubicacion_service.dart';
 import '../services/voz_service.dart';
 
 // ============================================================
-// PANTALLA 3: NUEVA ENTRADA (el formulario)
+// PANTALLA 3: NUEVO REPORTE (el formulario)
 // Aquí se juntan los 3 gadgets:
-//   1. Cámara / galería  -> foto del día
-//   2. Micrófono         -> dictar el texto
-//   3. GPS               -> se toma solito al darle "Guardar"
+//   1. Cámara / galería  -> foto del problema
+//   2. Micrófono         -> dictar la descripción
+//   3. GPS               -> se toma solito al darle "Enviar reporte"
 // Al final todo se guarda en SQLite con DBHelper.
 // ============================================================
-class NuevaEntradaScreen extends StatefulWidget {
-  const NuevaEntradaScreen({super.key});
+class NuevoReporteScreen extends StatefulWidget {
+  const NuevoReporteScreen({super.key});
 
   @override
-  State<NuevaEntradaScreen> createState() => _NuevaEntradaScreenState();
+  State<NuevoReporteScreen> createState() => _NuevoReporteScreenState();
 }
 
-class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
-  // Los "controllers" guardan lo que el usuario escribe en cada campo.
-  final _tituloController = TextEditingController();
-  final _textoController = TextEditingController();
+class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
+  // El "controller" guarda lo que el usuario escribe en el campo de texto.
+  final _descripcionController = TextEditingController();
   final _voz = VozService();
 
+  String _tipo = Reporte.tipos.first; // tipo elegido en el menú (Bache por defecto)
   String? _imagen; // ruta de la foto elegida
   bool _escuchando = false; // ¿el micrófono está grabando?
   bool _guardando = false;
@@ -38,8 +38,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
   @override
   void dispose() {
-    _tituloController.dispose();
-    _textoController.dispose();
+    _descripcionController.dispose();
     super.dispose();
   }
 
@@ -88,12 +87,12 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
         return;
       }
 
-      final textoAnterior = _textoController.text;
+      final textoAnterior = _descripcionController.text;
       setState(() => _escuchando = true);
 
       // Cada vez que reconoce palabras, las ponemos en el campo de texto
       await _voz.escuchar((textoDictado) {
-        _textoController.text = '$textoAnterior $textoDictado'.trim();
+        _descripcionController.text = '$textoAnterior $textoDictado'.trim();
       });
     } catch (e) {
       if (mounted) setState(() => _escuchando = false);
@@ -102,12 +101,12 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   }
 
   // ---------- GADGET 3: GPS + guardar en SQLite ----------
-  // Pasos: 1) revisar que haya título y texto, 2) pedir permiso de ubicación,
+  // Pasos: 1) revisar que haya descripción, 2) pedir permiso de ubicación,
   // 3) leer el GPS (mostrando "Obteniendo tu ubicación..."), 4) guardar en SQLite.
-  // Si el GPS falla NO perdemos la entrada: se guarda sin ubicación.
+  // Si el GPS falla NO perdemos el reporte: se guarda sin ubicación.
   Future<void> _guardar() async {
-    if (_tituloController.text.isEmpty || _textoController.text.isEmpty) {
-      _mostrarMensaje('Escribe un título y lo que pasó hoy');
+    if (_descripcionController.text.trim().isEmpty) {
+      _mostrarMensaje('Escribe o dicta qué problema viste');
       return;
     }
     if (_escuchando) {
@@ -132,7 +131,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
         latitud = posicion.latitude;
         longitud = posicion.longitude;
       } catch (e) {
-        // Si falla el GPS, igual guardamos la entrada pero sin ubicación
+        // Si falla el GPS, igual guardamos el reporte pero sin ubicación
         _mostrarMensaje('Se guardará sin ubicación: $e');
       }
     } else {
@@ -140,19 +139,19 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
     }
     if (mounted) setState(() => _estado = 'Guardando...');
 
-    // Guardamos la entrada en la base de datos
+    // Guardamos el reporte en la base de datos
     try {
       final ahora = DateTime.now();
       final minutos = ahora.minute.toString().padLeft(2, '0');
-      final entrada = Entrada(
-        titulo: _tituloController.text,
-        texto: _textoController.text,
+      final reporte = Reporte(
+        tipo: _tipo,
+        descripcion: _descripcionController.text.trim(),
         fecha: '${ahora.day}/${ahora.month}/${ahora.year} ${ahora.hour}:$minutos',
         imagen: _imagen,
         latitud: latitud,
         longitud: longitud,
       );
-      await DBHelper.insertar(entrada);
+      await DBHelper.insertar(reporte);
 
       if (!mounted) return;
       Navigator.pop(context); // regresamos a la lista
@@ -161,6 +160,33 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
     } finally {
       if (mounted) setState(() => _guardando = false);
     }
+  }
+
+  // Título de cada paso del formulario (número en círculo + texto)
+  Widget _paso(int numero, String titulo, String ayuda) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20, bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(radius: 14, child: Text('$numero')),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  titulo,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                Text(ayuda, style: const TextStyle(color: Colors.grey)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _mostrarMensaje(String mensaje) {
@@ -175,11 +201,13 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nueva entrada')),
+      appBar: AppBar(title: const Text('Nuevo reporte')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
-          // Vista previa de la foto
+          // ---- PASO 1: foto ----
+          _paso(1, 'Toma una foto del problema',
+              'Opcional, pero ayuda a que lo arreglen más rápido'),
           if (_imagen != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
@@ -189,7 +217,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
             Container(
               height: 200,
               color: Colors.grey[300],
-              child: const Icon(Icons.photo, size: 80, color: Colors.grey),
+              child: const Icon(Icons.add_a_photo, size: 80, color: Colors.grey),
             ),
           const SizedBox(height: 8),
           Row(
@@ -211,20 +239,29 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _tituloController,
+          // ---- PASO 2: tipo ----
+          _paso(2, '¿Qué tipo de problema es?', 'Elige una opción de la lista'),
+          // Menú desplegable para elegir el tipo de problema
+          DropdownButtonFormField<String>(
+            initialValue: _tipo,
             decoration: const InputDecoration(
-              labelText: 'Título',
+              labelText: 'Tipo de problema',
               border: OutlineInputBorder(),
             ),
+            items: Reporte.tipos
+                .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                .toList(),
+            onChanged: (valor) => setState(() => _tipo = valor!),
           ),
-          const SizedBox(height: 16),
+          // ---- PASO 3: descripción ----
+          _paso(3, 'Describe lo que pasa',
+              'Escríbelo o toca "Dictar con voz" y habla'),
           TextField(
-            controller: _textoController,
-            maxLines: 6,
+            controller: _descripcionController,
+            maxLines: 5,
             decoration: const InputDecoration(
-              labelText: '¿Qué pasó hoy?',
+              labelText: 'Descripción',
+              hintText: 'Ej. Bache grande frente a la tienda, ya rompió una llanta',
               border: OutlineInputBorder(),
             ),
           ),
@@ -239,6 +276,17 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
             ),
           ),
           const SizedBox(height: 24),
+          // Aviso para que el usuario sepa que se usará su ubicación
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.my_location, color: Colors.orange),
+              title: const Text('Tu ubicación se guarda sola'),
+              subtitle: const Text(
+                'Al enviar, tomamos tu ubicación GPS para saber dónde está el problema.',
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           if (_guardando)
             Column(
               children: [
@@ -250,8 +298,8 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
           else
             FilledButton.icon(
               onPressed: _guardar,
-              icon: const Icon(Icons.save),
-              label: const Text('Guardar'),
+              icon: const Icon(Icons.send),
+              label: const Text('Enviar reporte'),
             ),
         ],
       ),
