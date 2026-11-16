@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -26,6 +27,24 @@ class DetalleScreen extends StatelessWidget {
     }
   }
 
+  // Muestra cómo se guarda la entrada (serializada en JSON)
+  void _verJson(BuildContext context, Entrada entrada) {
+    final json = const JsonEncoder.withIndent('  ').convert(entrada.toMap());
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Datos guardados (JSON)'),
+        content: SingleChildScrollView(child: SelectableText(json)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _eliminar(BuildContext context, Entrada entrada) async {
     try {
       await DBHelper.eliminar(entrada.id!);
@@ -48,6 +67,11 @@ class DetalleScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(entrada.titulo),
         actions: [
+          IconButton(
+            tooltip: 'Ver datos en JSON',
+            icon: const Icon(Icons.data_object),
+            onPressed: () => _verJson(context, entrada),
+          ),
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () => _eliminar(context, entrada),

@@ -1,5 +1,5 @@
-name: bitacora
-description: "Bitácora: diario personal con fotos, dictado por voz y GPS. Parcial 2."
+﻿name: bitacora
+description: "BitÃ¡cora: diario personal con fotos, dictado por voz y GPS. Parcial 2."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -13,11 +13,13 @@ dependencies:
   sqflite: ^2.4.2          # base de datos local
   path: ^1.9.0             # para armar rutas de archivos
   path_provider: ^2.1.5    # carpeta donde guardamos las fotos
-  image_picker: ^1.2.0     # cámara y galería
-  speech_to_text: ^7.3.0   # micrófono: voz a texto
+  image_picker: ^1.2.0     # cÃ¡mara y galerÃ­a
+  speech_to_text: ^7.3.0   # micrÃ³fono: voz a texto
   geolocator: ^14.0.2      # GPS
   url_launcher: ^6.3.2     # abrir Google Maps
   cupertino_icons: ^1.0.8
+  local_auth: ^3.0.2
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'screens/detalle_screen.dart';
 import 'screens/inicio_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/nueva_entrada_screen.dart';
 
 // Punto de entrada de la app
@@ -24,7 +25,8 @@ class MiApp extends StatelessWidget {
       // Rutas con nombre: cada pantalla tiene un "nombre" para navegar a ella
       initialRoute: '/',
       routes: {
-        '/': (context) => const InicioScreen(),
+        '/': (context) => const LoginScreen(),
+        '/inicio': (context) => const InicioScreen(),
         '/nueva': (context) => const NuevaEntradaScreen(),
         '/detalle': (context) => const DetalleScreen(),
       },

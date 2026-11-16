@@ -1,5 +1,7 @@
 package com.marcos.bitacora
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// FlutterFragmentActivity es necesaria para el login biometrico (local_auth)
+class MainActivity : FlutterFragmentActivity()
+

@@ -142,6 +142,14 @@ class _InicioScreenState extends State<InicioScreen> {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Cerrar sesión'),
+            onTap: () {
+              // Regresa al login y borra todas las pantallas anteriores
+              Navigator.pushNamedAndRemoveUntil(context, '/', (ruta) => false);
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.info),
             title: const Text('Acerca de'),
             onTap: () {

@@ -1,10 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../database/db_helper.dart';
 import '../models/entrada.dart';
 import '../services/camara_service.dart';
+import '../services/permisos_service.dart';
 import '../services/ubicacion_service.dart';
 import '../services/voz_service.dart';
 
@@ -24,6 +26,7 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   String? _imagen; // ruta de la foto elegida
   bool _escuchando = false; // ¿el micrófono está grabando?
   bool _guardando = false;
+  String _estado = ''; // mensaje mientras se guarda (ej. "Obteniendo GPS...")
 
   @override
   void dispose() {
@@ -34,6 +37,10 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
 
   // ---------- GADGET 1: Cámara y galería ----------
   Future<void> _tomarFoto() async {
+    // Primero pedimos permiso de cámara; si lo niega, no seguimos
+    final permitido =
+        await PermisosService.pedir(context, Permission.camera, 'la cámara');
+    if (!permitido) return;
     try {
       final ruta = await CamaraService.tomarFoto();
       if (ruta != null) setState(() => _imagen = ruta);
@@ -59,6 +66,10 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
       setState(() => _escuchando = false);
       return;
     }
+
+    final conPermiso = await PermisosService.pedir(
+        context, Permission.microphone, 'el micrófono');
+    if (!conPermiso) return;
 
     try {
       final permitido = await _voz.iniciar(alTerminar: () {
@@ -88,19 +99,35 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
       _mostrarMensaje('Escribe un título y lo que pasó hoy');
       return;
     }
-    setState(() => _guardando = true);
+    if (_escuchando) {
+      await _voz.detener();
+      setState(() => _escuchando = false);
+    }
+    if (!mounted) return;
 
     // Intentamos obtener la ubicación GPS
     double? latitud;
     double? longitud;
-    try {
-      final posicion = await UbicacionService.obtenerUbicacion();
-      latitud = posicion.latitude;
-      longitud = posicion.longitude;
-    } catch (e) {
-      // Si falla el GPS, igual guardamos la entrada pero sin ubicación
-      _mostrarMensaje('Se guardará sin ubicación: $e');
+    final conPermiso = await PermisosService.pedir(
+        context, Permission.locationWhenInUse, 'la ubicación');
+
+    setState(() {
+      _guardando = true;
+      _estado = 'Obteniendo tu ubicación GPS...';
+    });
+    if (conPermiso) {
+      try {
+        final posicion = await UbicacionService.obtenerUbicacion();
+        latitud = posicion.latitude;
+        longitud = posicion.longitude;
+      } catch (e) {
+        // Si falla el GPS, igual guardamos la entrada pero sin ubicación
+        _mostrarMensaje('Se guardará sin ubicación: $e');
+      }
+    } else {
+      _mostrarMensaje('Se guardará sin ubicación');
     }
+    if (mounted) setState(() => _estado = 'Guardando...');
 
     // Guardamos la entrada en la base de datos
     try {
@@ -200,7 +227,13 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
           ),
           const SizedBox(height: 24),
           if (_guardando)
-            const Center(child: CircularProgressIndicator())
+            Column(
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 8),
+                Text(_estado),
+              ],
+            )
           else
             FilledButton.icon(
               onPressed: _guardar,
