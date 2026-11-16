@@ -24,9 +24,25 @@ class MiApp extends StatelessWidget {
     return MaterialApp(
       title: 'ReportaCalle',
       debugShowCheckedModeBanner: false,
+      // Tema: aquí se define el color de toda la app
       theme: ThemeData(
         colorSchemeSeed: azulApp,
         useMaterial3: true,
+        scaffoldBackgroundColor: azulClaro, // fondo azul claro en vez de blanco
+        appBarTheme: const AppBarTheme(
+          backgroundColor: azulApp, // barra de arriba azul fuerte
+          foregroundColor: Colors.white, // título e íconos en blanco
+        ),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: azulApp,
+          foregroundColor: Colors.white,
+        ),
+        drawerTheme: const DrawerThemeData(backgroundColor: azulClaro),
+        // Campos de texto con fondo blanco para que resalten sobre el azul
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+        ),
       ),
       // Rutas con nombre: cada pantalla tiene un "nombre" (como una URL).
       // Para ir a una pantalla solo hacemos Navigator.pushNamed(context, '/nuevo').

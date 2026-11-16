@@ -57,39 +57,49 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: azulApp, // el login es todo azul
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add_road, size: 90, color: azulApp),
+              const Icon(Icons.add_road, size: 90, color: Colors.white),
               const SizedBox(height: 16),
               const Text(
                 'ReportaCalle',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
                 'Reporta baches, lámparas apagadas, basura y fugas de tu ciudad.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 16, color: Colors.white),
               ),
               const SizedBox(height: 32),
               const Text(
                 'Pon tu huella para entrar',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: Colors.white70),
               ),
               const SizedBox(height: 12),
               if (_error != null) ...[
                 Text(
                   _error!,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red),
+                  style: const TextStyle(color: Color(0xFFFFCDD2)), // rojo claro
                 ),
                 const SizedBox(height: 12),
               ],
               FilledButton.icon(
+                // Botón blanco con letras azules
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: azulApp,
+                ),
                 onPressed: _verificando ? null : _desbloquear,
                 icon: const Icon(Icons.fingerprint),
                 label: Text(_verificando ? 'Verificando...' : 'Entrar con huella'),
