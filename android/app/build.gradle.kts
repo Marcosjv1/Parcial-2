@@ -9,7 +9,7 @@ plugins {
 
 android {
     // Paquete del código Kotlin (MainActivity)
-    namespace = "com.marcos.bitacora"
+    namespace = "com.marcos.reportacalle"
     // Versión de Android con la que se compila y herramientas nativas (las pone Flutter)
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         // ID único de la app en el teléfono (si cambia, Android cree que es otra app)
-        applicationId = "com.marcos.bitacora"
+        applicationId = "com.marcos.reportacalle"
         // Android más viejo donde corre y Android para el que está pensada
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion

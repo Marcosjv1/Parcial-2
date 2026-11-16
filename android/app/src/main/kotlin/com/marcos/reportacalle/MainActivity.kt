@@ -1,5 +1,5 @@
 // Paquete de Android de la app (es como su "dirección" única en el teléfono)
-package com.marcos.bitacora
+package com.marcos.reportacalle
 
 // FlutterFragmentActivity en vez de FlutterActivity: el paquete local_auth
 // (la huella) la necesita porque la ventanita de Android es un "Fragment"
