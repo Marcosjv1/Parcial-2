@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../tema.dart';
 
 // ============================================================
 // PANTALLA 1: LOGIN
@@ -62,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add_road, size: 90, color: Colors.orange),
+              const Icon(Icons.add_road, size: 90, color: azulApp),
               const SizedBox(height: 16),
               const Text(
                 'ReportaCalle',

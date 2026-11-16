@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
 import '../models/reporte.dart';
 import '../widgets/reporte_widgets.dart';
+import '../tema.dart';
 
 // ============================================================
 // PANTALLA 2: INICIO (la lista de reportes)
@@ -82,7 +83,7 @@ class _InicioScreenState extends State<InicioScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_road, size: 80, color: Colors.orange),
+                  Icon(Icons.add_road, size: 80, color: azulApp),
                   SizedBox(height: 16),
                   Text(
                     'Aún no has reportado nada',
@@ -154,7 +155,7 @@ class _InicioScreenState extends State<InicioScreen> {
         padding: EdgeInsets.zero,
         children: [
           const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.orange),
+            decoration: BoxDecoration(color: azulApp),
             child: Text(
               'ReportaCalle\nReporta problemas de tu ciudad',
               style: TextStyle(color: Colors.white, fontSize: 22),

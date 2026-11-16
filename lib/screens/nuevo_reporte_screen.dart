@@ -9,6 +9,7 @@ import '../services/camara_service.dart';
 import '../services/permisos_service.dart';
 import '../services/ubicacion_service.dart';
 import '../services/voz_service.dart';
+import '../tema.dart';
 
 // ============================================================
 // PANTALLA 3: NUEVO REPORTE (el formulario)
@@ -279,7 +280,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
           // Aviso para que el usuario sepa que se usará su ubicación
           Card(
             child: ListTile(
-              leading: const Icon(Icons.my_location, color: Colors.orange),
+              leading: const Icon(Icons.my_location, color: azulApp),
               title: const Text('Tu ubicación se guarda sola'),
               subtitle: const Text(
                 'Al enviar, tomamos tu ubicación GPS para saber dónde está el problema.',

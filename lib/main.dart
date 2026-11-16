@@ -4,6 +4,7 @@ import 'screens/detalle_screen.dart';
 import 'screens/inicio_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/nuevo_reporte_screen.dart';
+import 'tema.dart';
 
 // ============================================================
 // main.dart — Aquí arranca TODO.
@@ -24,7 +25,7 @@ class MiApp extends StatelessWidget {
       title: 'ReportaCalle',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorSchemeSeed: Colors.orange,
+        colorSchemeSeed: azulApp,
         useMaterial3: true,
       ),
       // Rutas con nombre: cada pantalla tiene un "nombre" (como una URL).
