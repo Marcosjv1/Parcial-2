@@ -1,6 +1,11 @@
 import 'package:speech_to_text/speech_to_text.dart';
 
-// Servicio que usa el micrófono para convertir la voz en texto
+// ============================================================
+// GADGET 2: MICRÓFONO (VOZ A TEXTO)
+// Usa el paquete speech_to_text: abre el micrófono, escucha lo que
+// dices y el reconocedor de voz de Google lo convierte en texto
+// en tiempo real. Ese texto se va poniendo en el formulario.
+// ============================================================
 class VozService {
   final SpeechToText _speech = SpeechToText();
 

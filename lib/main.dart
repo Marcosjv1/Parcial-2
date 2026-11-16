@@ -5,7 +5,12 @@ import 'screens/inicio_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/nueva_entrada_screen.dart';
 
-// Punto de entrada de la app
+// ============================================================
+// main.dart — Aquí arranca TODO.
+// Cuando abres la app, Flutter ejecuta main() y main() le dice
+// "corre MiApp". MiApp es el "esqueleto": define el tema (colores)
+// y la lista de pantallas (rutas) a las que se puede navegar.
+// ============================================================
 void main() {
   runApp(const MiApp());
 }
@@ -22,7 +27,9 @@ class MiApp extends StatelessWidget {
         colorSchemeSeed: Colors.teal,
         useMaterial3: true,
       ),
-      // Rutas con nombre: cada pantalla tiene un "nombre" para navegar a ella
+      // Rutas con nombre: cada pantalla tiene un "nombre" (como una URL).
+      // Para ir a una pantalla solo hacemos Navigator.pushNamed(context, '/nueva').
+      // initialRoute = la primera pantalla que se ve al abrir la app (el login).
       initialRoute: '/',
       routes: {
         '/': (context) => const LoginScreen(),

@@ -1,6 +1,11 @@
 import 'package:local_auth/local_auth.dart';
 
-// Servicio de login biométrico (huella / rostro, o el PIN del teléfono)
+// ============================================================
+// LOGIN BIOMÉTRICO — Usa el paquete local_auth.
+// Le pide a Android que muestre su ventana de "pon tu huella".
+// Nosotros nunca vemos la huella: Android solo nos dice "sí era" o
+// "no era". Por eso es seguro.
+// ============================================================
 class AuthService {
   static final LocalAuthentication _auth = LocalAuthentication();
 
@@ -20,6 +25,8 @@ class AuthService {
         persistAcrossBackgrounding: true,
       );
     } on LocalAuthException catch (e) {
+      // Cada error tiene un código. Según el código, decidimos qué decirle
+      // al usuario (canceló, no tiene huella configurada, muchos intentos...).
       switch (e.code) {
         case LocalAuthExceptionCode.userCanceled:
         case LocalAuthExceptionCode.systemCanceled:

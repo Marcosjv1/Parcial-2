@@ -10,7 +10,14 @@ import '../services/permisos_service.dart';
 import '../services/ubicacion_service.dart';
 import '../services/voz_service.dart';
 
-// Formulario para escribir una nueva entrada del diario
+// ============================================================
+// PANTALLA 3: NUEVA ENTRADA (el formulario)
+// Aquí se juntan los 3 gadgets:
+//   1. Cámara / galería  -> foto del día
+//   2. Micrófono         -> dictar el texto
+//   3. GPS               -> se toma solito al darle "Guardar"
+// Al final todo se guarda en SQLite con DBHelper.
+// ============================================================
 class NuevaEntradaScreen extends StatefulWidget {
   const NuevaEntradaScreen({super.key});
 
@@ -19,6 +26,7 @@ class NuevaEntradaScreen extends StatefulWidget {
 }
 
 class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
+  // Los "controllers" guardan lo que el usuario escribe en cada campo.
   final _tituloController = TextEditingController();
   final _textoController = TextEditingController();
   final _voz = VozService();
@@ -94,6 +102,9 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
   }
 
   // ---------- GADGET 3: GPS + guardar en SQLite ----------
+  // Pasos: 1) revisar que haya título y texto, 2) pedir permiso de ubicación,
+  // 3) leer el GPS (mostrando "Obteniendo tu ubicación..."), 4) guardar en SQLite.
+  // Si el GPS falla NO perdemos la entrada: se guarda sin ubicación.
   Future<void> _guardar() async {
     if (_tituloController.text.isEmpty || _textoController.text.isEmpty) {
       _mostrarMensaje('Escribe un título y lo que pasó hoy');
@@ -159,6 +170,8 @@ class _NuevaEntradaScreenState extends State<NuevaEntradaScreen> {
     );
   }
 
+  // build: dibuja la pantalla. Cada vez que hacemos setState(),
+  // Flutter vuelve a llamar build() y la pantalla se actualiza.
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -4,7 +4,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
-// Servicio para tomar una foto con la cámara o elegirla de la galería
+// ============================================================
+// GADGET 1: CÁMARA Y GALERÍA
+// Usa el paquete image_picker, que abre la cámara o la galería del
+// teléfono y nos regresa la foto que el usuario eligió.
+// ============================================================
 class CamaraService {
   static final ImagePicker _picker = ImagePicker();
 
@@ -24,7 +28,9 @@ class CamaraService {
     );
     if (foto == null) return null; // el usuario canceló
 
-    // Copiamos la foto a la carpeta de la app para que no se borre
+    // OJO: image_picker deja la foto en una carpeta temporal que Android
+    // puede limpiar cuando quiera. Por eso la copiamos a la carpeta propia
+    // de la app y en SQLite guardamos ESA ruta (no la foto en sí).
     final carpeta = await getApplicationDocumentsDirectory();
     final nombre = 'foto_${DateTime.now().millisecondsSinceEpoch}.jpg';
     final nuevaRuta = join(carpeta.path, nombre);

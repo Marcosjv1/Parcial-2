@@ -7,11 +7,16 @@ import 'package:url_launcher/url_launcher.dart';
 import '../database/db_helper.dart';
 import '../models/entrada.dart';
 
-// Pantalla que muestra una entrada completa
+// ============================================================
+// PANTALLA 4: DETALLE
+// Muestra una entrada completa: foto (con animación Hero), texto,
+// coordenadas y el botón para abrir Google Maps.
+// ============================================================
 class DetalleScreen extends StatelessWidget {
   const DetalleScreen({super.key});
 
-  // Abre Google Maps con las coordenadas guardadas
+  // Arma un link de Google Maps con la latitud y longitud guardadas
+  // y lo abre con url_launcher (se abre la app de Maps o el navegador).
   Future<void> _abrirMapa(BuildContext context, Entrada entrada) async {
     final url = Uri.parse(
       'https://www.google.com/maps/search/?api=1'
@@ -60,7 +65,8 @@ class DetalleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Recibimos la entrada que nos mandó la pantalla de inicio
+    // La pantalla de inicio nos mandó la entrada como "arguments"
+    // al navegar (pushNamed). Aquí la recibimos.
     final entrada = ModalRoute.of(context)!.settings.arguments as Entrada;
 
     return Scaffold(

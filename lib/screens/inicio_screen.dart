@@ -5,7 +5,14 @@ import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
 import '../models/entrada.dart';
 
-// Pantalla principal: muestra la lista de entradas del diario
+// ============================================================
+// PANTALLA 2: INICIO (la lista de entradas)
+// Tiene la estructura que pide el profe:
+//   - Scaffold: el "marco" de la pantalla
+//   - AppBar:   la barra de arriba con el título
+//   - Drawer:   el menú lateral (botón de 3 rayitas)
+//   - FutureBuilder: carga las entradas de SQLite sin congelar la app
+// ============================================================
 class InicioScreen extends StatefulWidget {
   const InicioScreen({super.key});
 
@@ -14,7 +21,9 @@ class InicioScreen extends StatefulWidget {
 }
 
 class _InicioScreenState extends State<InicioScreen> {
-  // Aquí guardamos la "promesa" de las entradas que vienen de SQLite
+  // Un Future es "una respuesta que llegará después". Leer SQLite tarda
+  // un poquito, así que guardamos la promesa aquí y el FutureBuilder
+  // se encarga de esperar y redibujar cuando lleguen los datos.
   late Future<List<Entrada>> _entradas;
 
   @override
@@ -51,8 +60,10 @@ class _InicioScreenState extends State<InicioScreen> {
         onPressed: _irANuevaEntrada,
         child: const Icon(Icons.add),
       ),
-      // FutureBuilder: muestra algo distinto mientras carga, si hay error
-      // o cuando ya llegaron los datos
+      // FutureBuilder: según cómo vaya el Future, muestra algo distinto:
+      //   esperando -> circulito de carga
+      //   error     -> mensaje de error
+      //   listo     -> la lista (o "Aún no tienes entradas" si está vacía)
       body: FutureBuilder<List<Entrada>>(
         future: _entradas,
         builder: (context, snapshot) {
@@ -79,7 +90,8 @@ class _InicioScreenState extends State<InicioScreen> {
               final entrada = entradas[i];
               return Card(
                 child: ListTile(
-                  // Hero: la foto "vuela" a la pantalla de detalle
+                  // Hero: la foto "vuela" a la pantalla de detalle.
+                  // Funciona porque aquí y en el detalle usamos el MISMO tag.
                   leading: Hero(
                     tag: 'foto${entrada.id}',
                     child: _miniatura(entrada),

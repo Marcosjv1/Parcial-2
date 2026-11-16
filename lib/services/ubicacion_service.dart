@@ -1,6 +1,11 @@
 import 'package:geolocator/geolocator.dart';
 
-// Servicio para obtener la ubicación GPS actual
+// ============================================================
+// GADGET 3: GPS
+// Usa el paquete geolocator para saber dónde está el teléfono.
+// Si algo falla (GPS apagado, sin permiso), lanza una excepción
+// con un mensaje claro; el formulario la atrapa con try-catch.
+// ============================================================
 class UbicacionService {
   static Future<Position> obtenerUbicacion() async {
     // 1. Revisar que el GPS esté prendido

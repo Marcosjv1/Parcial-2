@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 
-// Pantalla de bloqueo: pide la huella (o el PIN del teléfono) para entrar
+// ============================================================
+// PANTALLA 1: LOGIN
+// Es lo primero que ves. Pide la huella (o el PIN del teléfono).
+// Si es correcta, te manda a la lista de entradas.
+// ============================================================
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
