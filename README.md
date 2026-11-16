@@ -2,11 +2,11 @@
 
 App de Flutter para **reportar problemas de la ciudad** (baches, luminarias apagadas, basura, fugas de agua). En cada reporte puedes:
 
-- 📷 Tomar una foto con la **cámara** o elegirla de la **galería**
-- 🎤 **Dictar** la descripción con el micrófono (voz a texto)
-- 📍 Guardar automáticamente la **ubicación GPS** y abrirla en **Google Maps**
-- ✅ Marcarlo como **Pendiente** o **Resuelto**
-- 🔒 Entrar con **huella digital** (login biométrico)
+-  Tomar una foto con la **cámara** o elegirla de la **galería**
+-  **Dictar** la descripción con el micrófono (voz a texto)
+- Guardar automáticamente la **ubicación GPS** y abrirla en **Google Maps**
+-  Marcarlo como **Pendiente** o **Resuelto**
+-  Entrar con **huella digital** (login biométrico)
 
 Todo se guarda en el teléfono con **SQLite**, sin necesidad de internet.
 
@@ -15,7 +15,6 @@ Todo se guarda en el teléfono con **SQLite**, sin necesidad de internet.
 Tomadas del emulador de Android Studio (Pixel 7, Android 15).
 
 | Login con huella | Lista de reportes | Menú lateral |
-|:---:|:---:|:---:|
 | <img src="docs/capturas/01_huella.png" width="220"> | <img src="docs/capturas/06_lista.png" width="220"> | <img src="docs/capturas/07_menu.png" width="220"> |
 | **Formulario (3 pasos)** | **Obteniendo el GPS** | **Detalle del reporte** |
 | <img src="docs/capturas/04_formulario_lleno.png" width="220"> | <img src="docs/capturas/05_guardando.png" width="220"> | <img src="docs/capturas/08_detalle.png" width="220"> |
@@ -70,4 +69,4 @@ lib/
 | Login biométrico | `auth_service.dart`, `login_screen.dart` |
 | Permisos denegados | `permisos_service.dart` |
 
-El reporte técnico (diagrama de clases, flujo de datos y justificación) está en `docs/Reporte_Tecnico_ReportaCalle.pdf`.
+El reporte técnico (diagrama de clases, flujo de datos y justificación) está en `MO2. Parcial 2 Marcos Vidal.pdf`.
