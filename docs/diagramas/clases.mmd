@@ -3,40 +3,53 @@ direction LR
 class MiApp {
   +build() MaterialApp
 }
-class InicioScreen {
-  -Future~List~Entrada~~ _entradas
-  -_recargar()
-  -_irANuevaEntrada()
-  -_irADetalle(Entrada)
+class LoginScreen {
+  -_desbloquear()
 }
-class NuevaEntradaScreen {
+class InicioScreen {
+  -Future~List~Reporte~~ _reportes
+  -_recargar()
+  -_irANuevoReporte()
+  -_irADetalle(Reporte)
+}
+class NuevoReporteScreen {
+  -String _tipo
   -String? _imagen
   -bool _escuchando
   -_tomarFoto()
-  -_elegirDeGaleria()
   -_dictar()
   -_guardar()
 }
 class DetalleScreen {
-  -_abrirMapa(Entrada)
-  -_eliminar(Entrada)
+  -_abrirMapa(Reporte)
+  -_cambiarEstado(Reporte)
+  -_verJson(Reporte)
+  -_eliminar(Reporte)
 }
-class Entrada {
+class Reporte {
   +int? id
-  +String titulo
-  +String texto
+  +String tipo
+  +String descripcion
   +String fecha
+  +String estado
   +String? imagen
   +double? latitud
   +double? longitud
   +toMap() Map
-  +fromMap(Map)$ Entrada
+  +fromMap(Map)$ Reporte
+  +toJson() String
 }
 class DBHelper {
-  +obtenerDB()$ Database
-  +insertar(Entrada)$
-  +obtenerTodas()$ List~Entrada~
+  +insertar(Reporte)$
+  +obtenerTodos()$ List~Reporte~
+  +actualizarEstado(int, String)$
   +eliminar(int)$
+}
+class AuthService {
+  +autenticar()$ bool
+}
+class PermisosService {
+  +pedir(context, permiso, nombre)$ bool
 }
 class CamaraService {
   +tomarFoto()$ String?
@@ -50,13 +63,16 @@ class VozService {
 class UbicacionService {
   +obtenerUbicacion()$ Position
 }
-MiApp --> InicioScreen : ruta /
-MiApp --> NuevaEntradaScreen : ruta /nueva
+MiApp --> LoginScreen : ruta /
+MiApp --> InicioScreen : ruta /inicio
+MiApp --> NuevoReporteScreen : ruta /nuevo
 MiApp --> DetalleScreen : ruta /detalle
+LoginScreen --> AuthService
 InicioScreen --> DBHelper
 DetalleScreen --> DBHelper
-NuevaEntradaScreen --> DBHelper
-NuevaEntradaScreen --> CamaraService
-NuevaEntradaScreen --> VozService
-NuevaEntradaScreen --> UbicacionService
-DBHelper ..> Entrada
+NuevoReporteScreen --> DBHelper
+NuevoReporteScreen --> PermisosService
+NuevoReporteScreen --> CamaraService
+NuevoReporteScreen --> VozService
+NuevoReporteScreen --> UbicacionService
+DBHelper ..> Reporte

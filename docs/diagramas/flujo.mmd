@@ -1,12 +1,16 @@
 flowchart TB
+  HU[Huella] --> AS[AuthService] --> LS[LoginScreen]
+  LS -- "pushReplacementNamed('/inicio')" --> IS
   CAM[Cámara / Galería] -- foto --> CS[CamaraService]
   MIC[Micrófono] -- voz --> VS[VozService]
   GPS[GPS] -- posición --> US[UbicacionService]
-  CS -- ruta de la foto --> NE[NuevaEntradaScreen]
-  VS -- texto --> NE
-  US -- latitud y longitud --> NE
-  NE -- "insertar(entrada)" --> DB[DBHelper]
-  DB <--> SQL[(SQLite<br/>tabla entradas)]
-  DB -- "obtenerTodas()" --> IS[InicioScreen<br/>FutureBuilder]
+  PS[PermisosService] -. permisos .-> NR
+  CS -- ruta de la foto --> NR[NuevoReporteScreen]
+  VS -- texto --> NR
+  US -- latitud y longitud --> NR
+  NR -- "insertar(reporte)" --> DB[DBHelper]
+  DB <--> SQL[(SQLite<br/>tabla reportes)]
+  DB -- "obtenerTodos()" --> IS[InicioScreen<br/>FutureBuilder]
   IS -- "pushNamed('/detalle')" --> DS[DetalleScreen<br/>Hero]
+  DS -- "actualizarEstado()" --> DB
   DS -- coordenadas --> GM[Google Maps]

@@ -1,38 +1,40 @@
-# Bitácora — Parcial 2
+# ReportaCalle — Parcial 2
 
-App de diario personal hecha en Flutter. En cada entrada puedes:
+App de Flutter para **reportar problemas de la ciudad** (baches, luminarias apagadas, basura, fugas de agua). En cada reporte puedes:
 
 - 📷 Tomar una foto con la **cámara** o elegirla de la **galería**
-- 🎤 **Dictar** el texto con el micrófono (voz a texto)
-- 📍 Guardar automáticamente tu **ubicación GPS** y verla en **Google Maps**
-
+- 🎤 **Dictar** la descripción con el micrófono (voz a texto)
+- 📍 Guardar automáticamente la **ubicación GPS** y abrirla en **Google Maps**
+- ✅ Marcarlo como **Pendiente** o **Resuelto**
 - 🔒 Entrar con **huella digital** (login biométrico)
 
-Todo se guarda en el teléfono con **SQLite**.
+Todo se guarda en el teléfono con **SQLite**, sin necesidad de internet.
 
 ## Estructura del proyecto
 
 ```
 lib/
-├── main.dart                      Arranque de la app y rutas
+├── main.dart                      Arranque de la app y rutas con nombre
 ├── models/
-│   └── entrada.dart               Clase Entrada (los datos de un día)
+│   └── reporte.dart               Clase Reporte (datos + toMap / toJson)
 ├── database/
-│   └── db_helper.dart             Guardar, leer y borrar en SQLite
+│   └── db_helper.dart             INSERT, SELECT, UPDATE y DELETE en SQLite
 ├── services/
 │   ├── auth_service.dart          Login con huella
 │   ├── permisos_service.dart      Pedir permisos y manejar si los niegan
 │   ├── camara_service.dart        Cámara y galería
 │   ├── voz_service.dart           Micrófono → texto
 │   └── ubicacion_service.dart     GPS
+├── widgets/
+│   └── reporte_widgets.dart       Foto, etiqueta de estado e íconos por tipo
 └── screens/
     ├── login_screen.dart          Pantalla de huella
-    ├── inicio_screen.dart         Lista de entradas + menú lateral
-    ├── nueva_entrada_screen.dart  Formulario
-    └── detalle_screen.dart        Ver una entrada + Google Maps
+    ├── inicio_screen.dart         Lista de reportes + menú lateral
+    ├── nuevo_reporte_screen.dart  Formulario en 3 pasos
+    └── detalle_screen.dart        Detalle + Google Maps + marcar resuelto
 ```
 
-## Cómo ejecutarla
+## Cómo ejecutarla (Android Studio)
 
 1. Abrir la carpeta en **Android Studio** (con los plugins de Flutter y Dart).
 2. Abrir el emulador: **Device Manager → ▶** (o conectar un celular con depuración USB).
@@ -44,14 +46,16 @@ lib/
 | Requerimiento | Dónde |
 |---|---|
 | Scaffold, AppBar y Drawer | `inicio_screen.dart` |
-| Rutas y Navigator | `main.dart` (rutas `/`, `/nueva`, `/detalle`) |
+| Rutas con nombre y Navigator | `main.dart` (`/`, `/inicio`, `/nuevo`, `/detalle`) |
 | Animación Hero | foto en `inicio_screen.dart` → `detalle_screen.dart` |
-| SQLite | `db_helper.dart` |
-| try-catch | servicios y pantallas (`nueva_entrada`, `detalle`, `login`) |
-| Login biométrico | `auth_service.dart`, `login_screen.dart` |
-| Permisos denegados | `permisos_service.dart` |
-| Serialización JSON | `entrada.dart` (`toJson` / `fromJson`) |
+| SQLite (foto y coordenadas) | `db_helper.dart` |
+| Serialización JSON | `reporte.dart` (`toJson` / `fromJson`) |
+| try-catch | servicios y pantallas |
 | FutureBuilder | `inicio_screen.dart` |
 | Cámara y galería | `camara_service.dart` |
 | Micrófono / dictado | `voz_service.dart` |
 | GPS + Google Maps | `ubicacion_service.dart`, `detalle_screen.dart` |
+| Login biométrico | `auth_service.dart`, `login_screen.dart` |
+| Permisos denegados | `permisos_service.dart` |
+
+El reporte técnico (diagrama de clases, flujo de datos y justificación) está en `docs/Reporte_Tecnico_ReportaCalle.pdf`.

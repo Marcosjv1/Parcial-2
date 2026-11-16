@@ -1,19 +1,23 @@
 sequenceDiagram
   actor U as Usuario
-  participant N as NuevaEntradaScreen
+  participant N as NuevoReporteScreen
+  participant P as PermisosService
   participant C as CamaraService
   participant V as VozService
   participant G as UbicacionService
   participant D as DBHelper
   U->>N: Toca "Cámara"
+  N->>P: pedir(cámara)
+  P-->>N: concedido
   N->>C: tomarFoto()
   C-->>N: ruta de la foto
-  U->>N: Toca "Dictar con voz" y habla
+  U->>N: Elige "Bache" y toca "Dictar con voz"
   N->>V: escuchar()
   V-->>N: texto reconocido
-  U->>N: Toca "Guardar"
+  U->>N: Toca "Enviar reporte"
+  N->>P: pedir(ubicación)
   N->>G: obtenerUbicacion()
   G-->>N: latitud, longitud
-  N->>D: insertar(entrada)
+  N->>D: insertar(reporte)
   D-->>N: OK
-  N-->>U: Regresa a la lista
+  N-->>U: Regresa a "Mis reportes"
