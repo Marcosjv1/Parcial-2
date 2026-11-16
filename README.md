@@ -10,6 +10,18 @@ App de Flutter para **reportar problemas de la ciudad** (baches, luminarias apag
 
 Todo se guarda en el teléfono con **SQLite**, sin necesidad de internet.
 
+## Capturas
+
+Tomadas del emulador de Android Studio (Pixel 7, Android 15).
+
+| Login con huella | Lista de reportes | Menú lateral |
+|:---:|:---:|:---:|
+| <img src="docs/capturas/01_huella.png" width="220"> | <img src="docs/capturas/06_lista.png" width="220"> | <img src="docs/capturas/07_menu.png" width="220"> |
+| **Formulario (3 pasos)** | **Obteniendo el GPS** | **Detalle del reporte** |
+| <img src="docs/capturas/04_formulario_lleno.png" width="220"> | <img src="docs/capturas/05_guardando.png" width="220"> | <img src="docs/capturas/08_detalle.png" width="220"> |
+| **Reporte en JSON** | **Ubicación en Google Maps** | **Permiso bloqueado** |
+| <img src="docs/capturas/09_json.png" width="220"> | <img src="docs/capturas/10_maps.png" width="220"> | <img src="docs/capturas/12_permiso_negado.png" width="220"> |
+
 ## Estructura del proyecto
 
 ```
