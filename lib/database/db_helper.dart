@@ -1,6 +1,9 @@
+// path nos ayuda a armar la ruta del archivo de la base de datos
 import 'package:path/path.dart';
+// sqflite es el paquete para usar SQLite en Flutter
 import 'package:sqflite/sqflite.dart';
 
+// Necesitamos el modelo para convertir filas <-> objetos Reporte
 import '../models/reporte.dart';
 
 // ============================================================
@@ -10,6 +13,7 @@ import '../models/reporte.dart';
 // Las pantallas nunca tocan SQLite directo: le piden las cosas a DBHelper.
 // ============================================================
 class DBHelper {
+  // Aquí guardamos la conexión abierta. Empieza en null (todavía no se abre).
   static Database? _db;
 
   // Abre la base de datos. La primera vez que se usa la app no existe,
@@ -18,13 +22,17 @@ class DBHelper {
   // Las siguientes veces solo la abre. Guardamos la conexión en _db
   // para no abrirla una y otra vez.
   static Future<Database> obtenerDB() async {
-    if (_db != null) return _db!;
+    if (_db != null) return _db!; // si ya estaba abierta, la regresamos tal cual
 
+    // getDatabasesPath() = carpeta donde Android guarda las bases de datos de la app
     final ruta = join(await getDatabasesPath(), 'reportes.db');
     _db = await openDatabase(
       ruta,
-      version: 1,
+      version: 1, // si algún día cambiamos la tabla, subimos este número
+      // onCreate solo se ejecuta la PRIMERA vez (cuando el archivo no existe)
       onCreate: (db, version) async {
+        // SQL normal para crear la tabla. AUTOINCREMENT = el id se pone solo (1, 2, 3...)
+        // TEXT = texto, REAL = número con decimales
         await db.execute('''
           CREATE TABLE reportes(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,10 +47,11 @@ class DBHelper {
         ''');
       },
     );
-    return _db!;
+    return _db!; // el "!" le asegura a Dart que ya no es null
   }
 
   // INSERT: agrega una fila nueva con los datos del reporte (usa toMap).
+  // Regresa el id que SQLite le asignó.
   static Future<int> insertar(Reporte reporte) async {
     final db = await obtenerDB();
     return await db.insert('reportes', reporte.toMap());
@@ -52,7 +61,9 @@ class DBHelper {
   // de vuelta a objetos Reporte con fromMap.
   static Future<List<Reporte>> obtenerTodos() async {
     final db = await obtenerDB();
+    // orderBy 'id DESC' = ordenar por id de mayor a menor (el último primero)
     final filas = await db.query('reportes', orderBy: 'id DESC');
+    // .map recorre cada fila y la convierte; .toList() lo vuelve lista
     return filas.map((fila) => Reporte.fromMap(fila)).toList();
   }
 
@@ -61,9 +72,9 @@ class DBHelper {
     final db = await obtenerDB();
     await db.update(
       'reportes',
-      {'estado': estado},
-      where: 'id = ?',
-      whereArgs: [id],
+      {'estado': estado}, // solo cambiamos esta columna
+      where: 'id = ?', // solo la fila con ese id
+      whereArgs: [id], // el valor que reemplaza al "?"
     );
   }
 

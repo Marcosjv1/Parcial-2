@@ -1,6 +1,8 @@
+// dart:io para File (mostrar la vista previa de la foto)
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+// Para decir qué permiso queremos (Permission.camera, Permission.microphone...)
 import 'package:permission_handler/permission_handler.dart';
 
 import '../database/db_helper.dart';
@@ -29,14 +31,15 @@ class NuevoReporteScreen extends StatefulWidget {
 class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   // El "controller" guarda lo que el usuario escribe en el campo de texto.
   final _descripcionController = TextEditingController();
-  final _voz = VozService();
+  final _voz = VozService(); // nuestro servicio del micrófono
 
   String _tipo = Reporte.tipos.first; // tipo elegido en el menú (Bache por defecto)
   String? _imagen; // ruta de la foto elegida
   bool _escuchando = false; // ¿el micrófono está grabando?
-  bool _guardando = false;
+  bool _guardando = false; // true mientras se obtiene el GPS y se guarda
   String _estado = ''; // mensaje mientras se guarda (ej. "Obteniendo GPS...")
 
+  // dispose se ejecuta cuando se cierra la pantalla: liberamos el controller
   @override
   void dispose() {
     _descripcionController.dispose();
@@ -51,12 +54,13 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     if (!permitido) return;
     try {
       final ruta = await CamaraService.tomarFoto();
-      if (ruta != null) setState(() => _imagen = ruta);
+      if (ruta != null) setState(() => _imagen = ruta); // guardamos la ruta y se ve la foto
     } catch (e) {
       _mostrarMensaje('Error con la cámara: $e');
     }
   }
 
+  // La galería no necesita permiso en Android nuevo, por eso va directo
   Future<void> _elegirDeGaleria() async {
     try {
       final ruta = await CamaraService.elegirDeGaleria();
@@ -75,11 +79,13 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
       return;
     }
 
+    // Pedimos permiso del micrófono (con el manejo de "denegado")
     final conPermiso = await PermisosService.pedir(
         context, Permission.microphone, 'el micrófono');
     if (!conPermiso) return;
 
     try {
+      // Preparamos el micrófono; cuando termine de escuchar apagamos el botón rojo
       final permitido = await _voz.iniciar(alTerminar: () {
         if (mounted) setState(() => _escuchando = false);
       });
@@ -88,8 +94,9 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
         return;
       }
 
+      // Guardamos lo que ya estaba escrito para no borrarlo al dictar
       final textoAnterior = _descripcionController.text;
-      setState(() => _escuchando = true);
+      setState(() => _escuchando = true); // el botón se pone rojo con "Detener"
 
       // Cada vez que reconoce palabras, las ponemos en el campo de texto
       await _voz.escuchar((textoDictado) {
@@ -106,22 +113,25 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   // 3) leer el GPS (mostrando "Obteniendo tu ubicación..."), 4) guardar en SQLite.
   // Si el GPS falla NO perdemos el reporte: se guarda sin ubicación.
   Future<void> _guardar() async {
+    // trim() quita espacios; si no escribió nada, no dejamos guardar
     if (_descripcionController.text.trim().isEmpty) {
       _mostrarMensaje('Escribe o dicta qué problema viste');
       return;
     }
+    // Si el micrófono seguía prendido, lo apagamos antes de guardar
     if (_escuchando) {
       await _voz.detener();
       setState(() => _escuchando = false);
     }
     if (!mounted) return;
 
-    // Intentamos obtener la ubicación GPS
+    // Intentamos obtener la ubicación GPS (empiezan en null por si falla)
     double? latitud;
     double? longitud;
     final conPermiso = await PermisosService.pedir(
         context, Permission.locationWhenInUse, 'la ubicación');
 
+    // Mostramos el circulito de carga con el mensaje
     setState(() {
       _guardando = true;
       _estado = 'Obteniendo tu ubicación GPS...';
@@ -142,8 +152,10 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
 
     // Guardamos el reporte en la base de datos
     try {
-      final ahora = DateTime.now();
+      final ahora = DateTime.now(); // fecha y hora de este momento
+      // padLeft(2, '0') hace que 5 minutos se vea "05" y no "5"
       final minutos = ahora.minute.toString().padLeft(2, '0');
+      // Armamos el objeto Reporte con todo lo del formulario
       final reporte = Reporte(
         tipo: _tipo,
         descripcion: _descripcionController.text.trim(),
@@ -152,26 +164,29 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
         latitud: latitud,
         longitud: longitud,
       );
-      await DBHelper.insertar(reporte);
+      await DBHelper.insertar(reporte); // INSERT en SQLite
 
       if (!mounted) return;
       Navigator.pop(context); // regresamos a la lista
     } catch (e) {
       _mostrarMensaje('Error al guardar: $e');
     } finally {
+      // Pase lo que pase, quitamos el circulito de carga
       if (mounted) setState(() => _guardando = false);
     }
   }
 
   // Título de cada paso del formulario (número en círculo + texto)
+  // Lo hicimos función para no copiar y pegar lo mismo 3 veces
   Widget _paso(int numero, String titulo, String ayuda) {
     return Padding(
       padding: const EdgeInsets.only(top: 20, bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(radius: 14, child: Text('$numero')),
+          CircleAvatar(radius: 14, child: Text('$numero')), // el circulito con el número
           const SizedBox(width: 12),
+          // Expanded = ocupa todo el espacio que sobra a la derecha
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,6 +205,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     );
   }
 
+  // Atajo para mostrar un mensajito abajo (SnackBar)
   void _mostrarMensaje(String mensaje) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -209,6 +225,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
           // ---- PASO 1: foto ----
           _paso(1, 'Toma una foto del problema',
               'Opcional, pero ayuda a que lo arreglen más rápido'),
+          // Si ya hay foto, la mostramos; si no, un cuadro gris con ícono
           if (_imagen != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
@@ -221,6 +238,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
               child: const Icon(Icons.add_a_photo, size: 80, color: Colors.grey),
             ),
           const SizedBox(height: 8),
+          // Los dos botones de foto, uno al lado del otro
           Row(
             children: [
               Expanded(
@@ -249,16 +267,17 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
               labelText: 'Tipo de problema',
               border: OutlineInputBorder(),
             ),
+            // Convertimos cada texto de la lista en una opción del menú
             items: Reporte.tipos
                 .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                 .toList(),
-            onChanged: (valor) => setState(() => _tipo = valor!),
+            onChanged: (valor) => setState(() => _tipo = valor!), // guardamos lo que eligió
           ),
           // ---- PASO 3: descripción ----
           _paso(3, 'Describe lo que pasa',
               'Escríbelo o toca "Dictar con voz" y habla'),
           TextField(
-            controller: _descripcionController,
+            controller: _descripcionController, // aquí se guarda lo que escribe/dicta
             maxLines: 5,
             decoration: const InputDecoration(
               labelText: 'Descripción',
@@ -267,6 +286,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
             ),
           ),
           const SizedBox(height: 8),
+          // Botón del micrófono: cambia a rojo con "Detener" mientras escucha
           ElevatedButton.icon(
             onPressed: _dictar,
             icon: Icon(_escuchando ? Icons.stop : Icons.mic),
@@ -288,12 +308,13 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
             ),
           ),
           const SizedBox(height: 16),
+          // Mientras guarda: circulito de carga. Si no: el botón de enviar
           if (_guardando)
             Column(
               children: [
                 const CircularProgressIndicator(),
                 const SizedBox(height: 8),
-                Text(_estado),
+                Text(_estado), // "Obteniendo tu ubicación GPS..." o "Guardando..."
               ],
             )
           else

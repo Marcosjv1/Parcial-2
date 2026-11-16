@@ -1,17 +1,24 @@
+<!-- AndroidManifest: la "credencial" de la app. Aquí Android lee cómo se llama,
+     qué pantalla abre primero y qué permisos va a pedir. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Permisos requeridos por los gadgets de la app -->
-    <uses-permission android:name="android.permission.INTERNET" />            <!-- Mosaicos del mapa -->
-    <uses-permission android:name="android.permission.CAMERA" />              <!-- Cámara -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />        <!-- Micrófono / dictado -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- GPS -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.USE_BIOMETRIC" />            <!-- Huella / login biometrico -->
+    <!-- Permisos requeridos por los gadgets de la app.
+         Si un permiso no está aquí, Android ni siquiera deja pedirlo. -->
+    <uses-permission android:name="android.permission.INTERNET" />            <!-- Para abrir Google Maps / navegador -->
+    <uses-permission android:name="android.permission.CAMERA" />              <!-- Cámara para la foto del bache -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />        <!-- Micrófono para dictar -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- GPS preciso -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- GPS aproximado (Android lo pide junto) -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />       <!-- Huella para el login -->
 
     <application
         android:label="ReportaCalle"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- label = nombre que sale debajo del ícono en el teléfono -->
+        <!-- icon = el ícono de la app (está en la carpeta res/mipmap) -->
+
+        <!-- MainActivity es la "ventana" de Android donde Flutter dibuja toda la app -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -21,21 +28,31 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
+            <!-- exported=true: el launcher del teléfono puede abrirla -->
+            <!-- singleTop: si ya está abierta no abre otra copia -->
+            <!-- configChanges: al girar el teléfono no se reinicia la app, Flutter se acomoda solo -->
+            <!-- adjustResize: cuando sale el teclado, la pantalla se encoge para que no tape el campo de texto -->
+
+            <!-- Tema que se usa mientras Flutter termina de cargar -->
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
+            <!-- MAIN + LAUNCHER = esta es la pantalla que se abre al tocar el ícono -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Le dice a Flutter que use la versión 2 de su motor (la actual) -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
 
-    <!-- Android 11+: declarar con qué apps/servicios interactuamos -->
+    <!-- Android 11+: hay que declarar con qué otras apps/servicios vamos a hablar,
+         si no, Android los "esconde" y los paquetes no los encuentran -->
     <queries>
+        <!-- Lo pone Flutter por defecto (para procesar texto seleccionado) -->
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
@@ -44,11 +61,12 @@
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
-        <!-- Abrir Google Maps / navegador (url_launcher) -->
+        <!-- Abrir links https en el navegador o en Google Maps (url_launcher) -->
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" />
         </intent>
+        <!-- Abrir links geo: directo en una app de mapas -->
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="geo" />

@@ -1,30 +1,32 @@
-﻿name: bitacora
-description: "BitÃ¡cora: diario personal con fotos, dictado por voz y GPS. Parcial 2."
-publish_to: 'none'
-version: 1.0.0+1
+# pubspec.yaml: aquí va el nombre del proyecto y los paquetes (librerías) que usa.
+# Después de cambiar algo aquí hay que correr "flutter pub get" (Android Studio lo ofrece arriba).
+name: bitacora # nombre interno del proyecto (se quedó del primer borrador, no afecta)
+description: "ReportaCalle: reporte de baches y problemas urbanos con foto, voz y GPS. Parcial 2."
+publish_to: 'none' # no se va a publicar en pub.dev
+version: 1.0.0+1 # versión que se muestra (1.0.0) + número de compilación (1)
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.6.0 # versión mínima de Dart que necesita
 
 dependencies:
   flutter:
     sdk: flutter
 
-  sqflite: ^2.4.2          # base de datos local
+  sqflite: ^2.4.2          # base de datos local (SQLite)
   path: ^1.9.0             # para armar rutas de archivos
   path_provider: ^2.1.5    # carpeta donde guardamos las fotos
-  image_picker: ^1.2.0     # cÃ¡mara y galerÃ­a
-  speech_to_text: ^7.3.0   # micrÃ³fono: voz a texto
+  image_picker: ^1.2.0     # cámara y galería
+  speech_to_text: ^7.3.0   # micrófono: voz a texto
   geolocator: ^14.0.2      # GPS
   url_launcher: ^6.3.2     # abrir Google Maps
-  cupertino_icons: ^1.0.8
-  local_auth: ^3.0.2
-  permission_handler: ^12.0.1
+  cupertino_icons: ^1.0.8  # íconos estilo iPhone (los trae Flutter por defecto)
+  local_auth: ^3.0.2       # login con huella o PIN
+  permission_handler: ^12.0.1 # pedir permisos y saber si los negaron (la 13 pide SDK 37)
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^5.0.0    # revisa que el código siga buenas prácticas
 
 flutter:
-  uses-material-design: true
+  uses-material-design: true # para poder usar los íconos de Material (Icons.xxx)

@@ -1,3 +1,4 @@
+// dart:convert trae jsonEncode y jsonDecode para trabajar con JSON
 import 'dart:convert';
 
 // ============================================================
@@ -7,16 +8,18 @@ import 'dart:convert';
 // convertirlos a otro formato (Map / JSON) para poder guardarlos.
 // ============================================================
 class Reporte {
-  int? id; // lo asigna SQLite automáticamente
+  // El "?" significa que puede ser null (vacío)
+  int? id; // lo asigna SQLite automáticamente, por eso al crear el reporte va vacío
   String tipo; // Bache, Luminaria apagada, Basura...
   String descripcion; // lo que escribiste o dictaste
-  String fecha;
+  String fecha; // la guardamos como texto, ej. "15/11/2026 20:30"
   String estado; // 'Pendiente' o 'Resuelto'
-  String? imagen; // ruta de la foto en el teléfono
+  String? imagen; // ruta de la foto en el teléfono (puede no tener foto)
   double? latitud; // coordenadas GPS de dónde está el problema
-  double? longitud;
+  double? longitud; // (pueden ser null si el GPS falló)
 
-  // Los tipos de problema que se pueden reportar (salen en el menú del formulario)
+  // Los tipos de problema que se pueden reportar (salen en el menú del formulario).
+  // Es static porque es la misma lista para todos los reportes.
   static const List<String> tipos = [
     'Bache',
     'Luminaria apagada',
@@ -25,6 +28,8 @@ class Reporte {
     'Otro',
   ];
 
+  // Constructor: así se crea un Reporte nuevo.
+  // "required" = obligatorio pasarlo; los demás son opcionales.
   Reporte({
     this.id,
     required this.tipo,
@@ -36,10 +41,12 @@ class Reporte {
     this.longitud,
   });
 
+  // Getter: un atajo para preguntar "¿ya está resuelto?" sin comparar textos cada vez
   bool get resuelto => estado == 'Resuelto';
 
   // toMap: pasa el Reporte a un Map (clave: valor), que es básicamente un JSON.
   // SQLite no entiende objetos de Dart, pero sí un Map. Por eso lo usamos al guardar.
+  // Cada clave tiene que llamarse igual que la columna de la tabla.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -55,13 +62,14 @@ class Reporte {
 
   // fromMap: lo contrario. Agarra una fila que viene de SQLite (un Map)
   // y la vuelve a convertir en un objeto Reporte que la app sí puede usar.
+  // "factory" es un constructor que puede hacer cosas antes de crear el objeto.
   factory Reporte.fromMap(Map<String, dynamic> map) {
     return Reporte(
-      id: map['id'] as int?,
+      id: map['id'] as int?, // "as" le dice a Dart de qué tipo es el dato
       tipo: map['tipo'] as String,
       descripcion: map['descripcion'] as String,
       fecha: map['fecha'] as String,
-      estado: map['estado'] as String? ?? 'Pendiente',
+      estado: map['estado'] as String? ?? 'Pendiente', // "??" = si viene null, usa 'Pendiente'
       imagen: map['imagen'] as String?,
       // "as num" acepta 21 o 21.04; luego lo pasamos a double
       latitud: (map['latitud'] as num?)?.toDouble(),
@@ -71,8 +79,9 @@ class Reporte {
 
   // toJson / fromJson: lo mismo, pero en texto JSON ("serializar").
   // Lo usamos en el detalle con el botón { } para enseñar cómo se guardan los datos.
-  String toJson() => jsonEncode(toMap());
+  String toJson() => jsonEncode(toMap()); // Map -> texto JSON
 
+  // texto JSON -> Map -> Reporte
   factory Reporte.fromJson(String json) {
     return Reporte.fromMap(jsonDecode(json) as Map<String, dynamic>);
   }
