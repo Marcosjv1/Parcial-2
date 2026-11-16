@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 //   2. Lo negó una vez      -> avisamos con un mensaje abajo (SnackBar).
 //   3. Lo negó para siempre -> ofrecemos abrir los Ajustes del teléfono.
 // (La rúbrica pide justo esto: "maneja los casos donde el usuario deniega permisos")
+// SOLID (S): esta clase solo maneja permisos; los demás servicios y pantallas la reutilizan.
 // ============================================================
 class PermisosService {
   // Regresa true si el permiso quedó concedido.

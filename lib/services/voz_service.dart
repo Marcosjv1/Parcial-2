@@ -6,6 +6,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 // Usa el paquete speech_to_text: abre el micrófono, escucha lo que
 // dices y el reconocedor de voz de Google lo convierte en texto
 // en tiempo real. Ese texto se va poniendo en el formulario.
+// SOLID (S): un servicio por gadget. Este solo sabe del micrófono.
 // ============================================================
 class VozService {
   // El objeto del paquete que controla el micrófono

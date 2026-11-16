@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 // GADGET 1: CÁMARA Y GALERÍA
 // Usa el paquete image_picker, que abre la cámara o la galería del
 // teléfono y nos regresa la foto que el usuario eligió.
+// SOLID (S): un servicio por gadget. Este solo sabe de cámara y galería.
 // ============================================================
 class CamaraService {
   // El objeto que abre la cámara/galería

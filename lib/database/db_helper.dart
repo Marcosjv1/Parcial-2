@@ -11,6 +11,9 @@ import '../models/reporte.dart';
 // SQLite es una mini base de datos que vive DENTRO del teléfono,
 // por eso tus reportes no se borran aunque cierres la app.
 // Las pantallas nunca tocan SQLite directo: le piden las cosas a DBHelper.
+// SOLID (S): DBHelper solo se encarga de SQLite.
+// SOLID (D - Inversión de dependencias): las pantallas dependen de DBHelper,
+// no de sqflite directo; si cambiamos de base de datos, solo se cambia este archivo.
 // ============================================================
 class DBHelper {
   // Aquí guardamos la conexión abierta. Empieza en null (todavía no se abre).

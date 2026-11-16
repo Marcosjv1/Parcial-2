@@ -8,6 +8,7 @@ import '../models/reporte.dart';
 // ============================================================
 // WIDGETS REUTILIZABLES — Piezas de pantalla que se usan en varios
 // lugares (la lista y el detalle). Así no repetimos el mismo código.
+// SOLID (S): cada widget hace una sola cosa (ícono, etiqueta o foto).
 // ============================================================
 
 // Un ícono distinto para cada tipo de problema

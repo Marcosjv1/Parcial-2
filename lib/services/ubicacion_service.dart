@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 // Usa el paquete geolocator para saber dónde está el teléfono.
 // Si algo falla (GPS apagado, sin permiso), lanza una excepción
 // con un mensaje claro; el formulario la atrapa con try-catch.
+// SOLID (S): un servicio por gadget. Este solo sabe del GPS.
 // ============================================================
 class UbicacionService {
   // Position trae latitud, longitud, precisión, etc.

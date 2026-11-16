@@ -12,6 +12,7 @@ import '../tema.dart';
 //   - AppBar:   la barra de arriba con el título
 //   - Drawer:   el menú lateral (botón de 3 rayitas)
 //   - FutureBuilder: carga los reportes de SQLite sin congelar la app
+// SOLID (S): la pantalla solo muestra la lista; los datos se los pide a DBHelper.
 // ============================================================
 class InicioScreen extends StatefulWidget {
   const InicioScreen({super.key});

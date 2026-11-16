@@ -14,6 +14,7 @@ import '../widgets/reporte_widgets.dart';
 // Muestra un reporte completo: foto (con animación Hero), tipo,
 // estado, descripción, coordenadas y el botón para abrir Google Maps.
 // También deja marcarlo como resuelto o borrarlo.
+// SOLID (S): la pantalla solo muestra el reporte; guardar y borrar lo hace DBHelper.
 // ============================================================
 
 // Es StatelessWidget porque no guarda nada; al cambiar algo regresa a la lista

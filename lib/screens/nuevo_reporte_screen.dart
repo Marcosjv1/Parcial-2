@@ -20,6 +20,8 @@ import '../tema.dart';
 //   2. Micrófono         -> dictar la descripción
 //   3. GPS               -> se toma solito al darle "Enviar reporte"
 // Al final todo se guarda en SQLite con DBHelper.
+// SOLID (S y D): la pantalla no usa los paquetes directo, usa los servicios
+// (CamaraService, VozService, UbicacionService, PermisosService) y DBHelper.
 // ============================================================
 class NuevoReporteScreen extends StatefulWidget {
   const NuevoReporteScreen({super.key});

@@ -6,6 +6,8 @@ import 'dart:convert';
 // Cada vez que reportas algo, se crea un objeto Reporte con estos datos.
 // Aquí NO hay pantallas ni base de datos, solo los datos y cómo
 // convertirlos a otro formato (Map / JSON) para poder guardarlos.
+// SOLID (S - Responsabilidad única): esta clase solo guarda los datos y
+// sabe convertirse a Map/JSON. No dibuja nada ni toca la base de datos.
 // ============================================================
 class Reporte {
   // El "?" significa que puede ser null (vacío)
@@ -19,6 +21,8 @@ class Reporte {
   double? longitud; // (pueden ser null si el GPS falló)
 
   // Los tipos de problema que se pueden reportar (salen en el menú del formulario).
+  // SOLID (O - Abierto/cerrado): para agregar un tipo nuevo solo se añade aquí,
+  // sin modificar las pantallas.
   // Es static porque es la misma lista para todos los reportes.
   static const List<String> tipos = [
     'Bache',

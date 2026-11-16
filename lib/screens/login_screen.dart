@@ -10,6 +10,7 @@ import '../tema.dart';
 // Si es correcta, te manda a la lista de reportes.
 // ¿Por qué huella? Tus reportes guardan fotos y lugares por donde
 // pasas, así que solo tú deberías poder verlos.
+// SOLID (S): la pantalla solo dibuja y reacciona; la huella la pide AuthService.
 // ============================================================
 
 // Es StatefulWidget porque la pantalla cambia (botón "Verificando...", mensaje de error)

@@ -6,6 +6,7 @@ import 'package:local_auth/local_auth.dart';
 // Le pide a Android que muestre su ventana de "pon tu huella".
 // Nosotros nunca vemos la huella: Android solo nos dice "sí era" o
 // "no era". Por eso es seguro.
+// SOLID (S): esta clase solo se encarga del login biométrico.
 // ============================================================
 class AuthService {
   // Objeto del paquete que hace todo el trabajo. Es static para crearlo una sola vez.
