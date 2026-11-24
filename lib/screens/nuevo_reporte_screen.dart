@@ -2,12 +2,16 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+// Para que el campo numérico solo acepte dígitos
+import 'package:flutter/services.dart';
 // Para decir qué permiso queremos (Permission.camera, Permission.microphone...)
 import 'package:permission_handler/permission_handler.dart';
 
 import '../database/db_helper.dart';
 import '../models/reporte.dart';
+import '../services/api_service.dart';
 import '../services/camara_service.dart';
+import '../services/historial_service.dart';
 import '../services/permisos_service.dart';
 import '../services/ubicacion_service.dart';
 import '../services/voz_service.dart';
@@ -19,7 +23,10 @@ import '../tema.dart';
 //   1. Cámara / galería  -> foto del problema
 //   2. Micrófono         -> dictar la descripción
 //   3. GPS               -> se toma solito al darle "Enviar reporte"
-// Al final todo se guarda en SQLite con DBHelper.
+// Paso 4 (proyecto final): tamaño (número), ¿es peligroso? (sí/no) y
+// la fecha en que lo viste (selector de fecha).
+// Al final todo se guarda en SQLite con DBHelper, se anota en el
+// historial (archivo plano) y se manda al servidor web.
 // SOLID (S y D): la pantalla no usa los paquetes directo, usa los servicios
 // (CamaraService, VozService, UbicacionService, PermisosService) y DBHelper.
 // ============================================================
@@ -34,17 +41,22 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   // El "controller" guarda lo que el usuario escribe en el campo de texto.
   final _descripcionController = TextEditingController();
   final _voz = VozService(); // nuestro servicio del micrófono
+  // Controller del campo numérico (tamaño en cm)
+  final _tamanoController = TextEditingController();
 
   String _tipo = Reporte.tipos.first; // tipo elegido en el menú (Bache por defecto)
   String? _imagen; // ruta de la foto elegida
   bool _escuchando = false; // ¿el micrófono está grabando?
   bool _guardando = false; // true mientras se obtiene el GPS y se guarda
   String _estado = ''; // mensaje mientras se guarda (ej. "Obteniendo GPS...")
+  bool _peligroso = false; // campo lógico: ¿es peligroso?
+  DateTime _fechaVisto = DateTime.now(); // selector de fecha: cuándo lo vio
 
   // dispose se ejecuta cuando se cierra la pantalla: liberamos el controller
   @override
   void dispose() {
     _descripcionController.dispose();
+    _tamanoController.dispose();
     super.dispose();
   }
 
@@ -110,6 +122,25 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     }
   }
 
+  // ---------- Selector de fecha ----------
+  // showDatePicker abre el calendario de Material. Regla de negocio:
+  // no se puede elegir una fecha futura ni de hace más de un año.
+  Future<void> _elegirFecha() async {
+    final hoy = DateTime.now();
+    final elegida = await showDatePicker(
+      context: context,
+      initialDate: _fechaVisto,
+      firstDate: DateTime(hoy.year - 1, hoy.month, hoy.day),
+      lastDate: hoy,
+      helpText: '¿Cuándo lo viste?',
+    );
+    if (elegida != null) setState(() => _fechaVisto = elegida);
+  }
+
+  // Convierte una fecha a texto: 2026-11-20 (formato que entiende PostgreSQL)
+  String _fechaIso(DateTime f) =>
+      '${f.year}-${f.month.toString().padLeft(2, '0')}-${f.day.toString().padLeft(2, '0')}';
+
   // ---------- GADGET 3: GPS + guardar en SQLite ----------
   // Pasos: 1) revisar que haya descripción, 2) pedir permiso de ubicación,
   // 3) leer el GPS (mostrando "Obteniendo tu ubicación..."), 4) guardar en SQLite.
@@ -119,6 +150,17 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
     if (_descripcionController.text.trim().isEmpty) {
       _mostrarMensaje('Escribe o dicta qué problema viste');
       return;
+    }
+    // Regla de negocio: si pone tamaño, debe ir de 1 a 1000 cm
+    int? tamano;
+    if (_tamanoController.text.isNotEmpty) {
+      tamano = int.tryParse(_tamanoController.text);
+      if (tamano == null ||
+          tamano < Reporte.tamanoMinimo ||
+          tamano > Reporte.tamanoMaximo) {
+        _mostrarMensaje('El tamaño debe ir de 1 a 1000 cm');
+        return;
+      }
     }
     // Si el micrófono seguía prendido, lo apagamos antes de guardar
     if (_escuchando) {
@@ -165,8 +207,26 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
         imagen: _imagen,
         latitud: latitud,
         longitud: longitud,
+        tamanoCm: tamano,
+        peligroso: _peligroso,
+        fechaVisto: _fechaIso(_fechaVisto),
       );
-      await DBHelper.insertar(reporte); // INSERT en SQLite
+      final idLocal = await DBHelper.insertar(reporte); // INSERT en SQLite
+      await HistorialService.registrar('Reporte guardado: $_tipo'); // archivo plano
+
+      // Lo mandamos al servidor web. Si falla, el reporte ya quedó en el
+      // teléfono y se puede reenviar después desde el detalle.
+      if (mounted) setState(() => _estado = 'Enviando al servidor...');
+      try {
+        final idServidor = await ApiService.enviarReporte(reporte);
+        await DBHelper.marcarEnviado(idLocal);
+        await HistorialService.registrar(
+            'Reporte enviado al servidor (id $idServidor)');
+        _mostrarMensaje('Reporte guardado y enviado al servidor');
+      } catch (e) {
+        _mostrarMensaje(
+            'Guardado en el teléfono. ${e.toString().replaceFirst('Exception: ', '')}');
+      }
 
       if (!mounted) return;
       Navigator.pop(context); // regresamos a la lista
@@ -296,6 +356,41 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: _escuchando ? Colors.red : null,
               foregroundColor: _escuchando ? Colors.white : null,
+            ),
+          ),
+          // ---- PASO 4: detalles (número, sí/no y fecha) ----
+          _paso(4, 'Algunos detalles', 'Ayudan a saber qué tan urgente es'),
+          // Entrada numérica: solo deja escribir dígitos
+          TextField(
+            controller: _tamanoController,
+            keyboardType: TextInputType.number, // teclado de números
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              labelText: 'Tamaño aproximado (cm)',
+              hintText: 'Opcional, de 1 a 1000',
+              border: OutlineInputBorder(),
+              suffixText: 'cm',
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Campo lógico: un interruptor de sí / no
+          Card(
+            child: SwitchListTile(
+              title: const Text('¿Es peligroso?'),
+              subtitle: const Text('Puede causar un accidente'),
+              value: _peligroso,
+              onChanged: (valor) => setState(() => _peligroso = valor),
+            ),
+          ),
+          // Selector de fecha: abre el calendario
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.calendar_month, color: azulApp),
+              title: const Text('¿Cuándo lo viste?'),
+              subtitle: Text(
+                  '${_fechaVisto.day}/${_fechaVisto.month}/${_fechaVisto.year}'),
+              trailing: const Icon(Icons.edit_calendar),
+              onTap: _elegirFecha,
             ),
           ),
           const SizedBox(height: 24),

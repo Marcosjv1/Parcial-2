@@ -7,13 +7,15 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../database/db_helper.dart';
 import '../models/reporte.dart';
+import '../services/api_service.dart';
+import '../services/historial_service.dart';
 import '../widgets/reporte_widgets.dart';
 
 // ============================================================
 // PANTALLA 4: DETALLE
 // Muestra un reporte completo: foto (con animación Hero), tipo,
 // estado, descripción, coordenadas y el botón para abrir Google Maps.
-// También deja marcarlo como resuelto o borrarlo.
+// También deja marcarlo como resuelto, borrarlo o (re)enviarlo al servidor.
 // SOLID (S): la pantalla solo muestra el reporte; guardar y borrar lo hace DBHelper.
 // ============================================================
 
@@ -42,11 +44,28 @@ class DetalleScreen extends StatelessWidget {
     final nuevo = reporte.resuelto ? 'Pendiente' : 'Resuelto'; // lo contrario de lo que tiene
     try {
       await DBHelper.actualizarEstado(reporte.id!, nuevo); // UPDATE en SQLite
+      await HistorialService.registrar('${reporte.tipo} marcado como $nuevo');
       if (!context.mounted) return;
       Navigator.pop(context); // regresamos a la lista, que se recarga sola
     } catch (e) {
       if (!context.mounted) return;
       _mensaje(context, 'Error al actualizar: $e');
+    }
+  }
+
+  // Manda al servidor un reporte que no se pudo enviar al guardarlo
+  Future<void> _enviar(BuildContext context, Reporte reporte) async {
+    try {
+      final idServidor = await ApiService.enviarReporte(reporte); // POST
+      await DBHelper.marcarEnviado(reporte.id!); // UPDATE enviado = 1
+      await HistorialService.registrar(
+          'Reporte enviado al servidor (id $idServidor)');
+      if (!context.mounted) return;
+      _mensaje(context, 'Enviado al servidor');
+      Navigator.pop(context);
+    } catch (e) {
+      if (!context.mounted) return;
+      _mensaje(context, e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -74,6 +93,7 @@ class DetalleScreen extends StatelessWidget {
   Future<void> _eliminar(BuildContext context, Reporte reporte) async {
     try {
       await DBHelper.eliminar(reporte.id!); // DELETE en SQLite
+      await HistorialService.registrar('Reporte eliminado: ${reporte.tipo}');
       if (!context.mounted) return;
       Navigator.pop(context); // regresamos a la lista
     } catch (e) {
@@ -137,6 +157,15 @@ class DetalleScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(reporte.descripcion, style: const TextStyle(fontSize: 18)),
           const SizedBox(height: 24),
+          // ---- Sección: detalles (los datos del paso 4 del formulario) ----
+          const Text('Detalles',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text('Tamaño aproximado: '
+              '${reporte.tamanoCm != null ? '${reporte.tamanoCm} cm' : 'no indicado'}'),
+          Text('¿Es peligroso?: ${reporte.peligroso ? 'Sí' : 'No'}'),
+          if (reporte.fechaVisto != null) Text('Lo viste el: ${reporte.fechaVisto}'),
+          const SizedBox(height: 24),
           // ---- Sección: ubicación ----
           const Text('Ubicación',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -169,6 +198,24 @@ class DetalleScreen extends StatelessWidget {
               reporte.resuelto ? 'Marcar como pendiente' : 'Marcar como resuelto',
             ),
           ),
+          const SizedBox(height: 24),
+          // ---- Sección: servidor web ----
+          const Text('Servidor',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          // Si ya se mandó, lo decimos; si no, botón para intentarlo otra vez
+          if (reporte.enviado)
+            const Row(children: [
+              Icon(Icons.cloud_done, color: Colors.green),
+              SizedBox(width: 8),
+              Text('Ya está en el servidor'),
+            ])
+          else
+            OutlinedButton.icon(
+              onPressed: () => _enviar(context, reporte),
+              icon: const Icon(Icons.cloud_upload),
+              label: const Text('Enviar al servidor'),
+            ),
         ],
       ),
     );

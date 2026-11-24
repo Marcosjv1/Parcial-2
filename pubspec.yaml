@@ -1,7 +1,7 @@
 # pubspec.yaml: aquí va el nombre del proyecto y los paquetes (librerías) que usa.
 # Después de cambiar algo aquí hay que correr "flutter pub get" (Android Studio lo ofrece arriba).
 name: reporta_calle # nombre interno del proyecto (solo minúsculas y guion bajo)
-description: "ReportaCalle: reporte de baches y problemas urbanos con foto, voz y GPS. Parcial 2."
+description: "ReportaCalle: reporte de baches y problemas urbanos con foto, voz y GPS. Proyecto ordinario."
 publish_to: 'none' # no se va a publicar en pub.dev
 version: 1.0.0+1 # versión que se muestra (1.0.0) + número de compilación (1)
 
@@ -22,6 +22,7 @@ dependencies:
   cupertino_icons: ^1.0.8  # íconos estilo iPhone (los trae Flutter por defecto)
   local_auth: ^3.0.2       # login con huella o PIN
   permission_handler: ^12.0.1 # pedir permisos y saber si los negaron (la 13 pide SDK 37)
+  http: ^1.2.2             # hablar con el servicio web (Node.js)
 
 dev_dependencies:
   flutter_test:
@@ -30,3 +31,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true # para poder usar los íconos de Material (Icons.xxx)
+  # Imágenes propias de la app (logo del login y fondo del menú)
+  assets:
+    - assets/images/

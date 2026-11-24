@@ -47,6 +47,13 @@ class _InicioScreenState extends State<InicioScreen> {
     _recargar(); // así aparece el reporte que acaba de guardar
   }
 
+  // Cierra el menú, abre otra pantalla y al regresar recarga la lista
+  Future<void> _irA(String ruta) async {
+    Navigator.pop(context); // cierra el Drawer
+    await Navigator.pushNamed(context, ruta);
+    _recargar();
+  }
+
   Future<void> _irADetalle(Reporte reporte) async {
     // Mandamos el reporte como argumento a la pantalla de detalle
     await Navigator.pushNamed(context, '/detalle', arguments: reporte);
@@ -160,9 +167,15 @@ class _InicioScreenState extends State<InicioScreen> {
       child: ListView(
         padding: EdgeInsets.zero, // para que el encabezado llegue hasta arriba
         children: [
-          // Encabezado azul del menú
+          // Encabezado con imagen de fondo (assets/images/fondo_menu.png)
           const DrawerHeader(
-            decoration: BoxDecoration(color: azulApp),
+            decoration: BoxDecoration(
+              color: azulApp,
+              image: DecorationImage(
+                image: AssetImage('assets/images/fondo_menu.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
             child: Text(
               'ReportaCalle\nReporta problemas de tu ciudad',
               style: TextStyle(color: Colors.white, fontSize: 22),
@@ -180,6 +193,21 @@ class _InicioScreenState extends State<InicioScreen> {
               Navigator.pop(context); // primero cerramos el menú
               _irANuevoReporte(); // y luego abrimos el formulario
             },
+          ),
+          ListTile(
+            leading: const Icon(Icons.grid_view),
+            title: const Text('Galería'),
+            onTap: () => _irA('/galeria'), // cuadrícula de reportes
+          ),
+          ListTile(
+            leading: const Icon(Icons.cloud),
+            title: const Text('Reportes de la ciudad'),
+            onTap: () => _irA('/ciudad'), // los que están en el servidor web
+          ),
+          ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text('Historial'),
+            onTap: () => _irA('/historial'), // el archivo plano
           ),
           ListTile(
             leading: const Icon(Icons.logout),

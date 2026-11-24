@@ -2,7 +2,10 @@
 import 'package:flutter/material.dart';
 
 // Importamos las 4 pantallas de la app para poder registrarlas como rutas
+import 'screens/ciudad_screen.dart';
 import 'screens/detalle_screen.dart';
+import 'screens/galeria_screen.dart';
+import 'screens/historial_screen.dart';
 import 'screens/inicio_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/nuevo_reporte_screen.dart';
@@ -61,6 +64,9 @@ class MiApp extends StatelessWidget {
         '/inicio': (context) => const InicioScreen(), // pantalla 2: lista de reportes
         '/nuevo': (context) => const NuevoReporteScreen(), // pantalla 3: formulario
         '/detalle': (context) => const DetalleScreen(), // pantalla 4: ver un reporte
+        '/galeria': (context) => const GaleriaScreen(), // cuadrícula de reportes
+        '/ciudad': (context) => const CiudadScreen(), // reportes del servidor web
+        '/historial': (context) => const HistorialScreen(), // archivo plano
       },
     );
   }

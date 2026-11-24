@@ -33,7 +33,7 @@ android {
 
     buildTypes {
         release {
-            // Para el parcial firmamos con la llave de debug, así "flutter build apk" funciona sin más
+            // Para el proyecto ordinario firmamos con la llave de debug, así "flutter build apk" funciona sin más
             signingConfig = signingConfigs.getByName("debug")
         }
     }

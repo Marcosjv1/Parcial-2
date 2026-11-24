@@ -1,4 +1,4 @@
-# ReportaCalle — Parcial 2
+# ReportaCalle — Proyecto Ordinario
 
 App de Flutter para **reportar problemas de la ciudad** (baches, luminarias apagadas, basura, fugas de agua). En cada reporte puedes:
 

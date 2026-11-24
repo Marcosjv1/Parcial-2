@@ -8,8 +8,6 @@ import '../models/reporte.dart';
 
 // ============================================================
 // BASE DE DATOS — DBHelper es el único que habla con SQLite.
-// SQLite es una mini base de datos que vive DENTRO del teléfono,
-// por eso tus reportes no se borran aunque cierres la app.
 // Las pantallas nunca tocan SQLite directo: le piden las cosas a DBHelper.
 // SOLID (S): DBHelper solo se encarga de SQLite.
 // SOLID (D - Inversión de dependencias): las pantallas dependen de DBHelper,
@@ -21,7 +19,8 @@ class DBHelper {
 
   // Abre la base de datos. La primera vez que se usa la app no existe,
   // así que onCreate crea la tabla "reportes" (como una hoja de Excel
-  // con columnas: id, tipo, descripcion, fecha, estado, imagen, latitud, longitud).
+  // con columnas: id, tipo, descripcion, fecha, estado, imagen, latitud, longitud,
+  // tamano_cm, peligroso, fecha_visto y enviado).
   // Las siguientes veces solo la abre. Guardamos la conexión en _db
   // para no abrirla una y otra vez.
   static Future<Database> obtenerDB() async {
@@ -31,11 +30,13 @@ class DBHelper {
     final ruta = join(await getDatabasesPath(), 'reportes.db');
     _db = await openDatabase(
       ruta,
-      version: 1, // si algún día cambiamos la tabla, subimos este número
+      // Versión 2: el proyecto final agregó 4 columnas. Al subir el número,
+      // en los teléfonos que ya tenían la versión 1 se corre onUpgrade.
+      version: 2,
       // onCreate solo se ejecuta la PRIMERA vez (cuando el archivo no existe)
       onCreate: (db, version) async {
         // SQL normal para crear la tabla. AUTOINCREMENT = el id se pone solo (1, 2, 3...)
-        // TEXT = texto, REAL = número con decimales
+        // TEXT = texto, REAL = número con decimales, INTEGER = entero (y 1/0 para sí/no)
         await db.execute('''
           CREATE TABLE reportes(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,9 +46,23 @@ class DBHelper {
             estado TEXT,
             imagen TEXT,
             latitud REAL,
-            longitud REAL
+            longitud REAL,
+            tamano_cm INTEGER,
+            peligroso INTEGER DEFAULT 0,
+            fecha_visto TEXT,
+            enviado INTEGER DEFAULT 0
           )
         ''');
+      },
+      // onUpgrade: si la app ya tenía la base vieja (versión 1), le agrega
+      // las columnas nuevas SIN borrar los reportes que ya estaban guardados
+      onUpgrade: (db, versionVieja, versionNueva) async {
+        if (versionVieja < 2) {
+          await db.execute('ALTER TABLE reportes ADD COLUMN tamano_cm INTEGER');
+          await db.execute('ALTER TABLE reportes ADD COLUMN peligroso INTEGER DEFAULT 0');
+          await db.execute('ALTER TABLE reportes ADD COLUMN fecha_visto TEXT');
+          await db.execute('ALTER TABLE reportes ADD COLUMN enviado INTEGER DEFAULT 0');
+        }
       },
     );
     return _db!; // el "!" le asegura a Dart que ya no es null
@@ -79,6 +94,12 @@ class DBHelper {
       where: 'id = ?', // solo la fila con ese id
       whereArgs: [id], // el valor que reemplaza al "?"
     );
+  }
+
+  // UPDATE: marca que el reporte ya se mandó al servidor web
+  static Future<void> marcarEnviado(int id) async {
+    final db = await obtenerDB();
+    await db.update('reportes', {'enviado': 1}, where: 'id = ?', whereArgs: [id]);
   }
 
   // DELETE: borra la fila cuyo id coincida. El "?" evita inyección SQL.

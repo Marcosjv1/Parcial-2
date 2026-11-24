@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 // El servicio que pide la huella
 import '../services/auth_service.dart';
+import '../services/historial_service.dart';
 import '../tema.dart';
 
 // ============================================================
@@ -48,6 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (ok) {
         // pushReplacementNamed quita el login de la pila de pantallas:
         // así el botón "atrás" no regresa a esta pantalla.
+        HistorialService.registrar('Inicio de sesión con huella'); // archivo plano
         Navigator.pushReplacementNamed(context, '/inicio');
         return;
       }
@@ -76,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min, // la columna ocupa solo lo necesario (queda centrada)
             children: [
-              const Icon(Icons.add_road, size: 90, color: Colors.white), // logo de la app
+              Image.asset('assets/images/logo.png', width: 140, height: 140), // logo (imagen de assets)
               const SizedBox(height: 16), // SizedBox = espacio en blanco entre cosas
               const Text(
                 'ReportaCalle',

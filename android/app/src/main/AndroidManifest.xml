@@ -13,9 +13,11 @@
 
     <application
         android:label="ReportaCalle"
+        android:usesCleartextTraffic="true"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <!-- label = nombre que sale debajo del ícono en el teléfono -->
+        <!-- usesCleartextTraffic = deja usar http:// (sin s) para hablar con el servidor de la laptop -->
         <!-- icon = el ícono de la app (está en la carpeta res/mipmap) -->
 
         <!-- MainActivity es la "ventana" de Android donde Flutter dibuja toda la app -->
