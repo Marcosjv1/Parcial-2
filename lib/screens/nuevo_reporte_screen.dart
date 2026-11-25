@@ -2,8 +2,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-// Para que el campo numérico solo acepte dígitos
-import 'package:flutter/services.dart';
 // Para decir qué permiso queremos (Permission.camera, Permission.microphone...)
 import 'package:permission_handler/permission_handler.dart';
 
@@ -16,6 +14,7 @@ import '../services/permisos_service.dart';
 import '../services/ubicacion_service.dart';
 import '../services/voz_service.dart';
 import '../tema.dart';
+import '../widgets/reporte_widgets.dart';
 
 // ============================================================
 // PANTALLA 3: NUEVO REPORTE (el formulario)
@@ -23,8 +22,8 @@ import '../tema.dart';
 //   1. Cámara / galería  -> foto del problema
 //   2. Micrófono         -> dictar la descripción
 //   3. GPS               -> se toma solito al darle "Enviar reporte"
-// Paso 4 (proyecto final): tamaño (número), ¿es peligroso? (sí/no) y
-// la fecha en que lo viste (selector de fecha).
+// Paso 4 (proyecto final): urgencia 1-5 (slider numérico), una referencia
+// del lugar (texto), ¿es peligroso? (sí/no) y la fecha en que lo viste.
 // Al final todo se guarda en SQLite con DBHelper, se anota en el
 // historial (archivo plano) y se manda al servidor web.
 // SOLID (S y D): la pantalla no usa los paquetes directo, usa los servicios
@@ -41,8 +40,9 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   // El "controller" guarda lo que el usuario escribe en el campo de texto.
   final _descripcionController = TextEditingController();
   final _voz = VozService(); // nuestro servicio del micrófono
-  // Controller del campo numérico (tamaño en cm)
-  final _tamanoController = TextEditingController();
+  // Controller de la referencia del lugar (texto opcional)
+  final _referenciaController = TextEditingController();
+  double _urgencia = 3; // slider numérico: de 1 (poco urgente) a 5 (muy urgente)
 
   String _tipo = Reporte.tipos.first; // tipo elegido en el menú (Bache por defecto)
   String? _imagen; // ruta de la foto elegida
@@ -56,7 +56,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
   @override
   void dispose() {
     _descripcionController.dispose();
-    _tamanoController.dispose();
+    _referenciaController.dispose();
     super.dispose();
   }
 
@@ -151,17 +151,6 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
       _mostrarMensaje('Escribe o dicta qué problema viste');
       return;
     }
-    // Regla de negocio: si pone tamaño, debe ir de 1 a 1000 cm
-    int? tamano;
-    if (_tamanoController.text.isNotEmpty) {
-      tamano = int.tryParse(_tamanoController.text);
-      if (tamano == null ||
-          tamano < Reporte.tamanoMinimo ||
-          tamano > Reporte.tamanoMaximo) {
-        _mostrarMensaje('El tamaño debe ir de 1 a 1000 cm');
-        return;
-      }
-    }
     // Si el micrófono seguía prendido, lo apagamos antes de guardar
     if (_escuchando) {
       await _voz.detener();
@@ -207,7 +196,10 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
         imagen: _imagen,
         latitud: latitud,
         longitud: longitud,
-        tamanoCm: tamano,
+        urgencia: _urgencia.round(), // el slider da decimales, lo pasamos a entero
+        referencia: _referenciaController.text.trim().isEmpty
+            ? null
+            : _referenciaController.text.trim(),
         peligroso: _peligroso,
         fechaVisto: _fechaIso(_fechaVisto),
       );
@@ -219,7 +211,7 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
       if (mounted) setState(() => _estado = 'Enviando al servidor...');
       try {
         final idServidor = await ApiService.enviarReporte(reporte);
-        await DBHelper.marcarEnviado(idLocal);
+        await DBHelper.marcarEnviado(idLocal, idServidor); // guardamos el id del servidor
         await HistorialService.registrar(
             'Reporte enviado al servidor (id $idServidor)');
         _mostrarMensaje('Reporte guardado y enviado al servidor');
@@ -236,6 +228,37 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
       // Pase lo que pase, quitamos el circulito de carga
       if (mounted) setState(() => _guardando = false);
     }
+  }
+
+  // Una tarjeta con la ilustración del tipo. La elegida se marca con borde azul.
+  Widget _tarjetaTipo(String tipo) {
+    final elegido = tipo == _tipo;
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => setState(() => _tipo = tipo), // guardamos lo que eligió
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: elegido ? Colors.white : Colors.white54,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: elegido ? azulApp : Colors.transparent, width: 3),
+        ),
+        child: Column(
+          children: [
+            Expanded(child: Image.asset(imagenDeTipo(tipo))),
+            const SizedBox(height: 4),
+            Text(
+              tipo,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: elegido ? FontWeight.bold : FontWeight.normal),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   // Título de cada paso del formulario (número en círculo + texto)
@@ -321,19 +344,16 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
             ],
           ),
           // ---- PASO 2: tipo ----
-          _paso(2, '¿Qué tipo de problema es?', 'Elige una opción de la lista'),
-          // Menú desplegable para elegir el tipo de problema
-          DropdownButtonFormField<String>(
-            initialValue: _tipo,
-            decoration: const InputDecoration(
-              labelText: 'Tipo de problema',
-              border: OutlineInputBorder(),
-            ),
-            // Convertimos cada texto de la lista en una opción del menú
-            items: Reporte.tipos
-                .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                .toList(),
-            onChanged: (valor) => setState(() => _tipo = valor!), // guardamos lo que eligió
+          _paso(2, '¿Qué tipo de problema es?', 'Toca la imagen que más se parezca'),
+          // Cuadrícula de 3 columnas con una ilustración por cada tipo
+          GridView.count(
+            crossAxisCount: 3,
+            shrinkWrap: true, // que mida lo que necesita (está dentro de otro ListView)
+            physics: const NeverScrollableScrollPhysics(), // el scroll lo maneja la pantalla
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 0.85,
+            children: Reporte.tipos.map(_tarjetaTipo).toList(),
           ),
           // ---- PASO 3: descripción ----
           _paso(3, 'Describe lo que pasa',
@@ -360,19 +380,45 @@ class _NuevoReporteScreenState extends State<NuevoReporteScreen> {
           ),
           // ---- PASO 4: detalles (número, sí/no y fecha) ----
           _paso(4, 'Algunos detalles', 'Ayudan a saber qué tan urgente es'),
-          // Entrada numérica: solo deja escribir dígitos
-          TextField(
-            controller: _tamanoController,
-            keyboardType: TextInputType.number, // teclado de números
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(
-              labelText: 'Tamaño aproximado (cm)',
-              hintText: 'Opcional, de 1 a 1000',
-              border: OutlineInputBorder(),
-              suffixText: 'cm',
+          // Entrada numérica: un slider de 1 a 5 que cambia de color (verde -> rojo)
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Urgencia: ${_urgencia.round()} - ${Reporte.textoUrgencia(_urgencia.round())}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: colorDeUrgencia(_urgencia.round()),
+                    ),
+                  ),
+                  Slider(
+                    value: _urgencia,
+                    min: Reporte.urgenciaMinima.toDouble(),
+                    max: Reporte.urgenciaMaxima.toDouble(),
+                    divisions: 4, // 5 posiciones: 1, 2, 3, 4, 5
+                    activeColor: colorDeUrgencia(_urgencia.round()),
+                    onChanged: (valor) => setState(() => _urgencia = valor),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 8),
+          // Campo de texto: una pista para encontrar el lugar (el GPS ya guarda la ubicación)
+          TextField(
+            controller: _referenciaController,
+            maxLength: 80,
+            decoration: const InputDecoration(
+              labelText: 'Referencia del lugar (opcional)',
+              hintText: 'Ej. frente a la tienda, junto al parque',
+              prefixIcon: Icon(Icons.place_outlined),
+              border: OutlineInputBorder(),
+            ),
+          ),
           // Campo lógico: un interruptor de sí / no
           Card(
             child: SwitchListTile(

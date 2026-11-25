@@ -89,13 +89,13 @@ class _InicioScreenState extends State<InicioScreen> {
           final reportes = snapshot.data ?? []; // si viene null, usamos lista vacía
           if (reportes.isEmpty) {
             // Si no hay reportes, explicamos cómo funciona la app
-            return const Padding(
-              padding: EdgeInsets.all(32),
+            return Padding(
+              padding: const EdgeInsets.all(32),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_road, size: 80, color: azulApp),
-                  SizedBox(height: 16),
+                  Image.asset('assets/images/vacio.png', height: 160),
+                  const SizedBox(height: 16),
                   Text(
                     'Aún no has reportado nada',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -205,6 +205,11 @@ class _InicioScreenState extends State<InicioScreen> {
             onTap: () => _irA('/ciudad'), // los que están en el servidor web
           ),
           ListTile(
+            leading: const Icon(Icons.slideshow),
+            title: const Text('Cómo funciona'),
+            onTap: () => _irA('/bienvenida'), // el carrusel de bienvenida
+          ),
+          ListTile(
             leading: const Icon(Icons.history),
             title: const Text('Historial'),
             onTap: () => _irA('/historial'), // el archivo plano
@@ -227,7 +232,9 @@ class _InicioScreenState extends State<InicioScreen> {
               showAboutDialog(
                 context: context,
                 applicationName: 'ReportaCalle',
-                applicationVersion: '1.0',
+                applicationVersion: '2.0',
+                applicationIcon:
+                    Image.asset('assets/images/logo.png', width: 56, height: 56),
                 children: const [
                   Text(
                     'Reporta baches, luminarias apagadas, basura y fugas '

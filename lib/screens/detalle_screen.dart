@@ -45,7 +45,19 @@ class DetalleScreen extends StatelessWidget {
     try {
       await DBHelper.actualizarEstado(reporte.id!, nuevo); // UPDATE en SQLite
       await HistorialService.registrar('${reporte.tipo} marcado como $nuevo');
+      // Si el reporte ya estaba en el servidor, también le avisamos a PostgreSQL (PUT).
+      // Si no hay conexión, el cambio queda guardado en el teléfono y seguimos.
+      var aviso = '';
+      if (reporte.servidorId != null) {
+        try {
+          await ApiService.actualizarEstado(reporte.servidorId!, nuevo);
+          await HistorialService.registrar('Estado actualizado en el servidor: $nuevo');
+        } catch (e) {
+          aviso = ' (no se pudo avisar al servidor)';
+        }
+      }
       if (!context.mounted) return;
+      _mensaje(context, 'Marcado como $nuevo$aviso');
       Navigator.pop(context); // regresamos a la lista, que se recarga sola
     } catch (e) {
       if (!context.mounted) return;
@@ -57,7 +69,7 @@ class DetalleScreen extends StatelessWidget {
   Future<void> _enviar(BuildContext context, Reporte reporte) async {
     try {
       final idServidor = await ApiService.enviarReporte(reporte); // POST
-      await DBHelper.marcarEnviado(reporte.id!); // UPDATE enviado = 1
+      await DBHelper.marcarEnviado(reporte.id!, idServidor); // UPDATE enviado = 1
       await HistorialService.registrar(
           'Reporte enviado al servidor (id $idServidor)');
       if (!context.mounted) return;
@@ -161,8 +173,12 @@ class DetalleScreen extends StatelessWidget {
           const Text('Detalles',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text('Tamaño aproximado: '
-              '${reporte.tamanoCm != null ? '${reporte.tamanoCm} cm' : 'no indicado'}'),
+          Text(
+            'Urgencia: ${reporte.urgencia} de 5 - ${Reporte.textoUrgencia(reporte.urgencia)}',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: colorDeUrgencia(reporte.urgencia)),
+          ),
+          if (reporte.referencia != null) Text('Referencia: ${reporte.referencia}'),
           Text('¿Es peligroso?: ${reporte.peligroso ? 'Sí' : 'No'}'),
           if (reporte.fechaVisto != null) Text('Lo viste el: ${reporte.fechaVisto}'),
           const SizedBox(height: 24),

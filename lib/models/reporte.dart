@@ -21,14 +21,17 @@ class Reporte {
   double? longitud; // (pueden ser null si el GPS falló)
 
   // ---- Campos nuevos del proyecto final ----
-  int? tamanoCm; // tamaño aproximado en cm (entrada numérica, opcional)
+  int urgencia; // qué tan urgente es, de 1 (poco) a 5 (muchísimo): entrada numérica (slider)
+  String? referencia; // referencia del lugar, ej. "frente a la tienda" (texto, opcional)
   bool peligroso; // ¿es peligroso? (campo lógico: sí / no)
   String? fechaVisto; // cuándo lo vio el usuario, ej. "2026-11-20" (selector de fecha)
   bool enviado; // ¿ya se mandó al servidor web?
+  int? servidorId; // el id que le dio PostgreSQL (sirve para avisarle cuando se resuelve)
+  String? fotoUrl; // dirección de la foto en el servidor (solo en reportes que vienen de la web)
 
-  // Regla de negocio: el tamaño, si se pone, va de 1 a 1000 cm
-  static const int tamanoMinimo = 1;
-  static const int tamanoMaximo = 1000;
+  // Regla de negocio: la urgencia va de 1 a 5
+  static const int urgenciaMinima = 1;
+  static const int urgenciaMaxima = 5;
 
   // Los tipos de problema que se pueden reportar (salen en el menú del formulario).
   // SOLID (O - Abierto/cerrado): para agregar un tipo nuevo solo se añade aquí,
@@ -53,11 +56,20 @@ class Reporte {
     this.imagen,
     this.latitud,
     this.longitud,
-    this.tamanoCm,
+    this.urgencia = 3, // por defecto, urgencia media
+    this.referencia,
     this.peligroso = false,
     this.fechaVisto,
     this.enviado = false,
+    this.servidorId,
+    this.fotoUrl,
   });
+
+  // Texto de la urgencia para mostrarla en pantalla
+  static String textoUrgencia(int nivel) {
+    const textos = ['', 'Muy baja', 'Baja', 'Media', 'Alta', 'Muy alta'];
+    return textos[nivel.clamp(1, 5)];
+  }
 
   // Getter: un atajo para preguntar "¿ya está resuelto?" sin comparar textos cada vez
   bool get resuelto => estado == 'Resuelto';
@@ -76,10 +88,12 @@ class Reporte {
       'imagen': imagen,
       'latitud': latitud,
       'longitud': longitud,
-      'tamano_cm': tamanoCm,
+      'urgencia': urgencia,
+      'referencia': referencia,
       'peligroso': peligroso ? 1 : 0,
       'fecha_visto': fechaVisto,
       'enviado': enviado ? 1 : 0,
+      'servidor_id': servidorId,
     };
   }
 
@@ -97,10 +111,12 @@ class Reporte {
       // "as num" acepta 21 o 21.04; luego lo pasamos a double
       latitud: (map['latitud'] as num?)?.toDouble(),
       longitud: (map['longitud'] as num?)?.toDouble(),
-      tamanoCm: (map['tamano_cm'] as num?)?.toInt(),
+      urgencia: (map['urgencia'] as num?)?.toInt() ?? 3,
+      referencia: map['referencia'] as String?,
       peligroso: _aBool(map['peligroso']),
       fechaVisto: map['fecha_visto'] as String?,
       enviado: _aBool(map['enviado']),
+      servidorId: (map['servidor_id'] as num?)?.toInt(),
     );
   }
 
@@ -117,7 +133,8 @@ class Reporte {
       'estado': estado,
       'latitud': latitud,
       'longitud': longitud,
-      'tamano_cm': tamanoCm,
+      'urgencia': urgencia,
+      'referencia': referencia,
       'peligroso': peligroso,
       'fecha_visto': fechaVisto,
     };

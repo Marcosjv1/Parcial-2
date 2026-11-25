@@ -36,12 +36,25 @@ class _CiudadScreenState extends State<CiudadScreen> {
   void _verDetalle(Reporte r) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Padding(
+      isScrollControlled: true, // para que quepa la foto grande
+      builder: (context) => SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // La foto que se subió al servidor (si tiene)
+            if (r.fotoUrl != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(r.fotoUrl!,
+                    width: double.infinity,
+                    height: 200,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, e, st) => const SizedBox(height: 0)),
+              ),
+              const SizedBox(height: 12),
+            ],
             Text(r.tipo,
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -51,7 +64,12 @@ class _CiudadScreenState extends State<CiudadScreen> {
             const SizedBox(height: 12),
             Text('Reportado: ${r.fecha}'),
             if (r.fechaVisto != null) Text('Visto el: ${r.fechaVisto}'),
-            if (r.tamanoCm != null) Text('Tamaño aproximado: ${r.tamanoCm} cm'),
+            Text(
+              'Urgencia: ${r.urgencia} de 5 - ${Reporte.textoUrgencia(r.urgencia)}',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, color: colorDeUrgencia(r.urgencia)),
+            ),
+            if (r.referencia != null) Text('Referencia: ${r.referencia}'),
             Text('¿Es peligroso?: ${r.peligroso ? 'Sí' : 'No'}'),
             if (r.latitud != null)
               Text('Ubicación: ${r.latitud!.toStringAsFixed(5)}, '
@@ -107,9 +125,12 @@ class _CiudadScreenState extends State<CiudadScreen> {
           return RefreshIndicator(
             onRefresh: _recargar,
             child: reportes.isEmpty
-                ? ListView(children: const [
-                    SizedBox(height: 200),
-                    Center(child: Text('El servidor no tiene reportes todavía')),
+                ? ListView(children: [
+                    const SizedBox(height: 120),
+                    Image.asset('assets/images/vacio.png', height: 180),
+                    const SizedBox(height: 12),
+                    const Center(
+                        child: Text('El servidor no tiene reportes todavía')),
                   ])
                 : ListView.builder(
                     padding: const EdgeInsets.only(bottom: 16),
@@ -127,14 +148,29 @@ class _CiudadScreenState extends State<CiudadScreen> {
                       final r = reportes[i - 1];
                       return Card(
                         child: ListTile(
-                          leading: Icon(iconoDeTipo(r.tipo), size: 36),
-                          title: Text(r.tipo),
+                          // Foto del servidor; si no tiene, la ilustración del tipo
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: r.fotoUrl != null
+                                ? Image.network(r.fotoUrl!,
+                                    width: 56,
+                                    height: 56,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (c, e, st) =>
+                                        Image.asset(imagenDeTipo(r.tipo), width: 56))
+                                : Image.asset(imagenDeTipo(r.tipo), width: 56),
+                          ),
+                          title: Row(children: [
+                            Text(r.tipo),
+                            if (r.peligroso) ...[
+                              const SizedBox(width: 6),
+                              const Icon(Icons.warning, color: Colors.red, size: 18),
+                            ],
+                          ]),
                           subtitle: Text('${r.fecha}\n${r.descripcion}',
                               maxLines: 2, overflow: TextOverflow.ellipsis),
                           isThreeLine: true,
-                          trailing: r.peligroso
-                              ? const Icon(Icons.warning, color: Colors.red)
-                              : EstadoChip(estado: r.estado),
+                          trailing: EstadoChip(estado: r.estado),
                           onTap: () => _verDetalle(r),
                         ),
                       );

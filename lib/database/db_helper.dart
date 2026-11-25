@@ -20,7 +20,7 @@ class DBHelper {
   // Abre la base de datos. La primera vez que se usa la app no existe,
   // así que onCreate crea la tabla "reportes" (como una hoja de Excel
   // con columnas: id, tipo, descripcion, fecha, estado, imagen, latitud, longitud,
-  // tamano_cm, peligroso, fecha_visto y enviado).
+  // urgencia, referencia, peligroso, fecha_visto, enviado y servidor_id).
   // Las siguientes veces solo la abre. Guardamos la conexión en _db
   // para no abrirla una y otra vez.
   static Future<Database> obtenerDB() async {
@@ -30,9 +30,9 @@ class DBHelper {
     final ruta = join(await getDatabasesPath(), 'reportes.db');
     _db = await openDatabase(
       ruta,
-      // Versión 2: el proyecto final agregó 4 columnas. Al subir el número,
-      // en los teléfonos que ya tenían la versión 1 se corre onUpgrade.
-      version: 2,
+      // Versión 3: el proyecto final agregó columnas nuevas. Al subir el número,
+      // en los teléfonos que ya tenían una versión vieja se corre onUpgrade.
+      version: 3,
       // onCreate solo se ejecuta la PRIMERA vez (cuando el archivo no existe)
       onCreate: (db, version) async {
         // SQL normal para crear la tabla. AUTOINCREMENT = el id se pone solo (1, 2, 3...)
@@ -47,10 +47,12 @@ class DBHelper {
             imagen TEXT,
             latitud REAL,
             longitud REAL,
-            tamano_cm INTEGER,
+            urgencia INTEGER DEFAULT 3,
+            referencia TEXT,
             peligroso INTEGER DEFAULT 0,
             fecha_visto TEXT,
-            enviado INTEGER DEFAULT 0
+            enviado INTEGER DEFAULT 0,
+            servidor_id INTEGER
           )
         ''');
       },
@@ -58,10 +60,14 @@ class DBHelper {
       // las columnas nuevas SIN borrar los reportes que ya estaban guardados
       onUpgrade: (db, versionVieja, versionNueva) async {
         if (versionVieja < 2) {
-          await db.execute('ALTER TABLE reportes ADD COLUMN tamano_cm INTEGER');
           await db.execute('ALTER TABLE reportes ADD COLUMN peligroso INTEGER DEFAULT 0');
           await db.execute('ALTER TABLE reportes ADD COLUMN fecha_visto TEXT');
           await db.execute('ALTER TABLE reportes ADD COLUMN enviado INTEGER DEFAULT 0');
+        }
+        if (versionVieja < 3) {
+          await db.execute('ALTER TABLE reportes ADD COLUMN urgencia INTEGER DEFAULT 3');
+          await db.execute('ALTER TABLE reportes ADD COLUMN referencia TEXT');
+          await db.execute('ALTER TABLE reportes ADD COLUMN servidor_id INTEGER');
         }
       },
     );
@@ -96,10 +102,12 @@ class DBHelper {
     );
   }
 
-  // UPDATE: marca que el reporte ya se mandó al servidor web
-  static Future<void> marcarEnviado(int id) async {
+  // UPDATE: marca que el reporte ya se mandó al servidor web y guarda el id
+  // que le dio PostgreSQL (así después podemos avisarle que ya se resolvió)
+  static Future<void> marcarEnviado(int id, int servidorId) async {
     final db = await obtenerDB();
-    await db.update('reportes', {'enviado': 1}, where: 'id = ?', whereArgs: [id]);
+    await db.update('reportes', {'enviado': 1, 'servidor_id': servidorId},
+        where: 'id = ?', whereArgs: [id]);
   }
 
   // DELETE: borra la fila cuyo id coincida. El "?" evita inyección SQL.

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 // El servicio que pide la huella
 import '../services/auth_service.dart';
 import '../services/historial_service.dart';
+import '../services/primer_uso_service.dart';
 import '../tema.dart';
 
 // ============================================================
@@ -50,7 +51,14 @@ class _LoginScreenState extends State<LoginScreen> {
         // pushReplacementNamed quita el login de la pila de pantallas:
         // así el botón "atrás" no regresa a esta pantalla.
         HistorialService.registrar('Inicio de sesión con huella'); // archivo plano
-        Navigator.pushReplacementNamed(context, '/inicio');
+        // La primera vez mostramos la bienvenida; después vamos directo a la lista
+        final yaVista = await PrimerUsoService.yaVioBienvenida();
+        if (!mounted) return;
+        if (yaVista) {
+          Navigator.pushReplacementNamed(context, '/inicio');
+        } else {
+          Navigator.pushReplacementNamed(context, '/bienvenida', arguments: true);
+        }
         return;
       }
       setState(() => _error = 'No se pudo verificar tu identidad');
