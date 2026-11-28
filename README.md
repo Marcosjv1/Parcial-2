@@ -1,73 +1,61 @@
-# ReportaCalle — Proyecto Ordinario
+# ReportaCalle - Proyecto final (ordinario)
 
-App de Flutter para **reportar problemas de la ciudad** (baches, luminarias apagadas, basura, fugas de agua). En cada reporte puedes:
+Proyecto final de **Programación de Dispositivos Móviles** (Universidad Anáhuac Mayab).
 
--  Tomar una foto con la **cámara** o elegirla de la **galería**
--  **Dictar** la descripción con el micrófono (voz a texto)
-- Guardar automáticamente la **ubicación GPS** y abrirla en **Google Maps**
--  Marcarlo como **Pendiente** o **Resuelto**
--  Entrar con **huella digital** (login biométrico)
+App de Flutter para **reportar problemas de la ciudad** (baches, luminarias apagadas, basura, fugas de agua). Cada reporte lleva foto, ubicación GPS, urgencia de 1 a 5, referencia del lugar y si es peligroso. Los reportes se guardan en el teléfono (SQLite) y se mandan a un servidor Node.js que los guarda en PostgreSQL.
 
-Todo se guarda en el teléfono con **SQLite**, sin necesidad de internet.
+## Qué hace
 
-## Capturas
+- Login con **huella digital** y bienvenida con carrusel que avanza solo.
+- Formulario de 4 pasos: foto (cámara o galería), tipo, descripción (se puede **dictar por voz**) y detalles.
+- **GPS** automático al enviar.
+- Se guarda en **SQLite** y en archivos de texto (`historial.txt`), aunque no haya internet.
+- Se envía al **servicio web** (Node.js + Express + PostgreSQL) y se pueden leer los reportes de todos.
+- Se puede marcar un reporte como **Resuelto** y el cambio llega al servidor.
 
-Tomadas del emulador de Android Studio (Pixel 7, Android 15).
-
-| Login con huella | Lista de reportes | Menú lateral |
-|:---:|:---:|:---:|
-| <img src="docs/capturas/01_huella.png" width="220"> | <img src="docs/capturas/06_lista.png" width="220"> | <img src="docs/capturas/07_menu.png" width="220"> |
-| **Formulario (3 pasos)** | **Obteniendo el GPS** | **Detalle del reporte** |
-| <img src="docs/capturas/04_formulario_lleno.png" width="220"> | <img src="docs/capturas/05_guardando.png" width="220"> | <img src="docs/capturas/08_detalle.png" width="220"> |
-| **Reporte en JSON** | **Ubicación en Google Maps** | **Permiso bloqueado** |
-| <img src="docs/capturas/09_json.png" width="220"> | <img src="docs/capturas/10_maps.png" width="220"> | <img src="docs/capturas/12_permiso_negado.png" width="220"> |
-
-## Estructura del proyecto
+## Estructura
 
 ```
-lib/
-├── main.dart                      Arranque de la app y rutas con nombre
-├── models/
-│   └── reporte.dart               Clase Reporte (datos + toMap / toJson)
-├── database/
-│   └── db_helper.dart             INSERT, SELECT, UPDATE y DELETE en SQLite
-├── services/
-│   ├── auth_service.dart          Login con huella
-│   ├── permisos_service.dart      Pedir permisos y manejar si los niegan
-│   ├── camara_service.dart        Cámara y galería
-│   ├── voz_service.dart           Micrófono → texto
-│   └── ubicacion_service.dart     GPS
-├── widgets/
-│   └── reporte_widgets.dart       Foto, etiqueta de estado e íconos por tipo
-└── screens/
-    ├── login_screen.dart          Pantalla de huella
-    ├── inicio_screen.dart         Lista de reportes + menú lateral
-    ├── nuevo_reporte_screen.dart  Formulario en 3 pasos
-    └── detalle_screen.dart        Detalle + Google Maps + marcar resuelto
+lib/            App Flutter (screens, services, models, database, widgets)
+servidor/       API en Node.js + Express
+  server.js     Rutas: GET/POST /api/reportes, GET /api/reportes/:id/foto, PUT /api/reportes/:id/estado
+  schema.sql    Tabla reportes de PostgreSQL
+  .env.example  Datos de conexión (copiar a .env)
+assets/images/  Imágenes de la app
 ```
 
-## Cómo ejecutarla (Android Studio)
+## Cómo correrlo
+
+### 1. Servidor y base de datos
+
+1. Tener **PostgreSQL** instalado y crear la base de datos con el script `servidor/schema.sql`.
+2. En `servidor/`, copiar `.env.example` a `.env` y poner los datos de conexión.
+3. En una terminal dentro de `servidor/`:
+
+```
+npm install
+npm start
+```
+
+El servidor queda en `http://localhost:3000`. Para ver los datos: `http://localhost:3000/api/reportes`.
+
+### 2. App (Android Studio)
 
 1. Abrir la carpeta en **Android Studio** (con los plugins de Flutter y Dart).
-2. Abrir el emulador: **Device Manager → ▶** (o conectar un celular con depuración USB).
-3. Arriba, elegir el dispositivo **(mobile)** y presionar **▶ Run**.
-4. En el emulador, la huella se simula con **⋯ → Fingerprint → Touch the sensor**.
+2. Abrir el emulador en **Device Manager** y elegirlo arriba.
+3. Presionar **Run**.
+4. En el emulador, la huella se simula con **... > Fingerprint > Touch the sensor**.
 
-## Requerimientos cubiertos
+La app llega al servidor desde el emulador con la dirección `10.0.2.2:3000` (el equivalente de `localhost` de la laptop).
 
-| Requerimiento | Dónde |
+## Requisitos del proyecto
+
+| Requisito | Dónde |
 |---|---|
-| Scaffold, AppBar y Drawer | `inicio_screen.dart` |
-| Rutas con nombre y Navigator | `main.dart` (`/`, `/inicio`, `/nuevo`, `/detalle`) |
-| Animación Hero | foto en `inicio_screen.dart` → `detalle_screen.dart` |
-| SQLite (foto y coordenadas) | `db_helper.dart` |
-| Serialización JSON | `reporte.dart` (`toJson` / `fromJson`) |
-| try-catch | servicios y pantallas |
-| FutureBuilder | `inicio_screen.dart` |
-| Cámara y galería | `camara_service.dart` |
-| Micrófono / dictado | `voz_service.dart` |
-| GPS + Google Maps | `ubicacion_service.dart`, `detalle_screen.dart` |
-| Login biométrico | `auth_service.dart`, `login_screen.dart` |
-| Permisos denegados | `permisos_service.dart` |
-
-El reporte técnico (diagrama de clases, flujo de datos y justificación) está en [docs/MO2. Parcial 2 Marcos Vidal.pdf](docs/MO2.%20Parcial%202%20Marcos%20Vidal.pdf).
+| Interfaz con imágenes | `assets/images/`, carrusel de bienvenida, ilustraciones por tipo |
+| Widget con desplazamiento automático | `bienvenida_screen.dart` |
+| Navegación con paso de datos | `main.dart`, de la lista al detalle |
+| Formulario (texto, número, booleano, fecha) | `nuevo_reporte_screen.dart` |
+| Al menos 2 gadgets | cámara, micrófono, GPS y huella |
+| Almacenamiento físico | `db_helper.dart` (SQLite) y archivos de texto |
+| Servicio web que escribe y lee en una BD | `servidor/server.js` + `api_service.dart` |
