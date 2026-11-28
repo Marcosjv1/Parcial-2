@@ -161,7 +161,9 @@ class _CiudadScreenState extends State<CiudadScreen> {
                                 : Image.asset(imagenDeTipo(r.tipo), width: 56),
                           ),
                           title: Row(children: [
-                            Text(r.tipo),
+                            // Flexible: si el nombre es largo se recorta en vez de desbordarse
+                            Flexible(
+                                child: Text(r.tipo, overflow: TextOverflow.ellipsis)),
                             if (r.peligroso) ...[
                               const SizedBox(width: 6),
                               const Icon(Icons.warning, color: Colors.red, size: 18),
